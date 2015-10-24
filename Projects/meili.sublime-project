@@ -1,0 +1,9 @@
+{
+	"folders":
+	[
+		{
+			"path": "/Users/kenshinhu/BitTorrent Sync/meili/meili/",
+			"folder_exclude_patterns":[".avoscloud",".idea"]
+		} 
+	]
+}

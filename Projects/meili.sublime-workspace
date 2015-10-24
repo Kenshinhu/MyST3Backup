@@ -1,0 +1,1015 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"con",
+				"contentPicArr"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/public/index.html",
+			"settings":
+			{
+				"buffer_size": 50,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/views/share/index.dust",
+			"settings":
+			{
+				"buffer_size": 5571,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/views/share/down.dust",
+			"settings":
+			{
+				"buffer_size": 5391,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/ks_itemController.ls",
+			"settings":
+			{
+				"buffer_size": 5342,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/share.ls",
+			"settings":
+			{
+				"buffer_size": 2795,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/api.ls",
+			"settings":
+			{
+				"buffer_size": 59628,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/services/commentsServices.ls",
+			"settings":
+			{
+				"buffer_size": 5536,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/index.ls",
+			"settings":
+			{
+				"buffer_size": 38828,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/user.ls",
+			"settings":
+			{
+				"buffer_size": 1708,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/lib/static.ls",
+			"settings":
+			{
+				"buffer_size": 7870,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/lib/joi.ls",
+			"settings":
+			{
+				"buffer_size": 9687,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "diff --git a/cloud/routes/api.ls b/cloud/routes/api.ls\nindex cc112b5..0ba4675 100755\n--- a/cloud/routes/api.ls\n+++ b/cloud/routes/api.ls\n@@ -1,1827 +1 @@\n-{saveFileWithUrl,saveFileWithData,send,saveFile,removeFile} = require \"cloud/lib/datarequest\"\n-{authorMap,userFilter,exhibitionInclude,commentFilter,exhibitionListInclude,ibeaconFilter,galleryInclude,exhibitionSampleKeys,itemInclude,itemsKeys,exhibitionFilter,galleryFilter,galleryRecommandFilter,itemFilter,exRecommandFilter,cityFilter} = require 'cloud/lib/static'\n-{union,isEmpty} = require \"lodash\"\n-require! \\util\n-require! \\moment\n-require! 'querystring'\n-require! \\cloud/lib/joi\n-require! \\crypto\n-require! \\cloud/lib/easemob\n-require! 'moment'\n-require! 'moment-timezone'\n-\n-sdk = require \"umeng-node-sdk\"\n-debug = require(\\debug)(\\meili:routeIndex)\n-\n-#加载帐号服务\n-{getUserFollow,getUserFavoriteByUserId,removeUserCommentBySessionToken,getUserInfo,getUserFans,checkUserFavorite,sendVerify,userCreate,checkSessionToken,getUserFavorite,addUserFavorite,removeUserFavorite,resetPassword,forgetPassword} = require \\cloud/services/accountServices\n-\n-#展览服务\n-{exhibition} = require \\cloud/services/exhibitionServices\n-\n-#评论服务\n-{commentsGood,commentsGetter,UserComment,UserCommentGetter} = require \\cloud/services/commentsServices\n-\n-# 友盟 iOS\n-uMengAppKey=\"553f262367e58e44ec00275c\"\n-uMengAppSecret=\"itleuty2d7romfxy3esqxmq1uqwua81t\"\n-\n-# 友盟 安卓\n-uMengAndroidAppKey = \"5550954fe0f55a07580006e7\"\n-uMengAndroidMasterKey = \"itwsq3ibgybpnukrinitnqpjmhsybnie\"\n-\n-#hash = crypto.createHash \\md5\n-#hash.update  \"asdfasdf\"\n-#debug \"``````\",hash.digest \\hex\n-#sortMap =\n-  #\\名称 : \\nameBase \\浏览次数 : \\viewCount \\收藏次数 : \\favoriteCount \\创建时间 : \\createdAt\n-  #\\-名称 : \\-nameBase \\-浏览次数 : \\-viewCount \\-收藏次数 : \\-favoriteCount \\-创建时间 : \\-createdAt\n-\n-  #[\"名称\",\"浏览次数\",\"收藏次数\",\"创建时间\"]\n-\n-/**\n-   @apiDefine systemStatic\n-  *\n-   @apiSuccess {Boolean} status 操作是否成功\n-   @apiSuccess {String}  results 系统常量字典\n-   @apiSuccess {String}  results.login 小刀会登陆开放状态:yea:开放;no:关闭\n-  *\n-   @apiSuccessExample {json} Success-Response::\n-  *HTTP/1.1 200\n-   {\n-      \"status\":true,\n-      \"results\":{\n-          \"login\":\"no\"\n-       }\n-   }\n-  */\n-\n-/**\n-  @apiDefine errorNotLogin\n-\n-  @apiError errorNotLogin 未登录\n-\n-  @apiErrorExample Error-Response:\n-      HTTP/1.1 200 Not Found\n-      {\n-        status:false\n-        {\n-          \"message\": \"not login yet\"\n-        }\n-      }\n- */\n-/**\n-  @apiDefine error203\n- *\n-  @apiError error203 此电子邮箱已经被占用\n- *\n-  @apiErrorExample Error-Response:\n- *     HTTP/1.1 200 Not Found\n- *     {\n- *       status:false\n- *       {\n- *         \"code\":203,\n- *         \"error\": \"此电子邮箱已经被占用。\"\n- *       }\n- *     }\n- */\n-\n-/**\n-  @apiDefine successGalleryRecommand\n- *\n-  @apiSuccess {Boolean} status 操作是否成功.\n-  @apiSuccess {Object}  results 展馆信息.\n-  @apiSuccess {Array}   results.contentPicArr   详细图\n-  @apiSuccess {Number}   results.exCount   展馆的展览数量\n-  @apiSuccess {Object}    results.coverUrl    封面\n-  @apiSuccess {Array}   results.nameBase   展馆名\n-  @apiSuccess {Object}    results.address    地址\n-  @apiSuccess {Number}    results.endTime    结束时间（秒）\n-  @apiSuccess {Number}    results.beginTime    开始时间（秒）\n-  @apiSuccess {Number}    results.entrancePrice    门票价格\n-  @apiSuccess {Number}     results.recommended       是否推荐\n-  @apiSuccess {String}     results.objectId          展馆id\n-  @apiSuccess {String}     results.information        详细信息\n-  @apiSuccess {String}     results.priceAddInfo        价格附加信息\n-  @apiSuccess {String}     results.timeAddInfo        时间附加信息\n- *\n- *\n-  @apiSuccessExample {json} Success-Response::\n- *HTTP/1.1 200\n- {\n-    \"status\": true,\n-    \"results\": [\n-        {\n-            \"contentPicArr\": [\n-                {\n-                    \"name\": \"00445004DD93D757.jpg\",\n-                    \"url\": \"http://ac-lolnfdt5.clouddn.com/07a476c13c98c1cc\"\n-                }\n-            ],\n-            \"coverUrl\": {\n-                \"name\": \"展馆3.jpg\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/2296d75ee46a14ff.jpg\"\n-            },\n-            \"address\": {\n-                \"citycode\": \"010\",\n-                \"address\": \"东长安街16号\",\n-                \"detailsAddress\": \"北京市北京市东城区东长安街16号中国国家博物馆\",\n-                \"name\": \"中国国家博物馆\",\n-                \"cityname\": \"北京市\",\n-                \"adname\": \"东城区\",\n-                \"pcode\": \"110000\",\n-                \"pname\": \"北京市\",\n-                \"adcode\": \"110101\"\n-            },\n-            \"objectId\": \"54c1bc6ee4b09521168c5622\",\n-            \"endTime\": 61200,\n-            \"priceAddInfo\": \"提供短信、网络、团体预约服务。凭有效证件免费领票。部分展览收费。\",\n-            \"timeAddInfo\": \"15:30止票，16:00停止入馆。周一闭馆\",\n-            \"entrancePrice\": 0,\n-            \"nameBase\": \"中国国家博物馆\",\n-            \"information\": \"中国国家博物馆（National Museum of China）简称国博，位于北京市中心天安门广场东侧，东长安街南侧，与人民大会堂东西相对称，是历史与艺术并重，集收藏、展览、研究、考古、公共教育、文化交流于一体的综合性博物馆。隶属于中华人民共和国文化部。\\r\\n截止至2013年末，中国国家博物馆总建筑面积近20万平方米，国博藏品数量为100余万件，展厅数量48个。是世界上单体建筑面积最大的博物馆，是中华文物收藏量最丰富的博物馆之一，整体规模在世界博物馆中位居前列，2012年游客接待量达到537万人次，2013年达到745万人次（当年全球第三 ），是全世界最受游客欢迎的博物馆之一。\",\n-            \"recommended\": 1,\n-            \"beginTime\": 32400,\n-            \"largePicUrl\": {\n-                \"name\": \"展馆3.jpg\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/e43ae5c062523ad9.jpg\"\n-            },\n-            \"exCount\": 4\n-        },\n-        {\n-            \"coverUrl\": {\n-                \"name\": \"展馆1.jpg\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/1c1e256a539f92b0\"\n-            },\n-            \"address\": {\n-                \"citycode\": \"010\",\n-                \"address\": \"花家地南街8号\",\n-                \"detailsAddress\": \"北京市北京市朝阳区花家地南街8号中央美术学院南区(东门)\",\n-                \"name\": \"中央美术学院南区(东门)\",\n-                \"cityname\": \"北京市\",\n-                \"adname\": \"朝阳区\",\n-                \"pcode\": \"110000\",\n-                \"pname\": \"北京市\",\n-                \"adcode\": \"110105\"\n-            },\n-            \"objectId\": \"54cf07eae4b0fe752dd814d5\",\n-            \"endTime\": 61200,\n-            \"priceAddInfo\": \"暂无\",\n-            \"timeAddInfo\": \"暂无\",\n-            \"entrancePrice\": 0,\n-            \"nameBase\": \"中央美术学院美术馆\",\n-            \"information\": \"新美术馆于2008年3月竣工，位于中央美院校园内，是中国最具现代化标准的美术展览馆之一。美术馆建筑呈微微扭转的三维曲面体，天然岩板幕墙，配以最现代性的类雕塑建筑，展现中央美术学院内敛低调的特质，同时也与校园内吴良镛先生设计的深灰色彩院落式布局的建筑物充分融合及协调。美术馆总面积为14777平方米，地上四层，地下二层，局部地下一层。展览及陈列面积共4150平方米，其中二层为固定陈列展，展示古代书画和美院资深教授的赠画藏品，以及当今美院在籍教授的作品；企划展厅设置在三层及四层，均为天光围幕的敞开式现代化展厅。三层11米高的展厅可为当代艺术展览提供充分的展示空间。美术馆藏品库房位于地下二层，1120平方米，采用国际最新信息技术和数字化管理，在软硬件方面均可达到国际水准。公共服务设施主要位于一层，其中报告厅可容纳380人，为学术研讨、专题讲座及新闻发布会等提供了便利场所。其他公共服务设施还有服务台、咖啡厅、书店等。\",\n-            \"recommended\": 1,\n-            \"beginTime\": 32400,\n-            \"largePicUrl\": {\n-                \"name\": \"展馆3.jpg\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/25dfde7da253a3e4\"\n-            },\n-            \"exCount\": 3\n-        }\n-    ]\n-}\n- */\n-\n-/**\n-  @apiDefine successExhibition\n- *\n- *\n-  @apiSuccess {Boolean} status 操作是否成功.\n-  @apiSuccess {Object}  results 展览信息.\n-  @apiSuccess {Array}   results.contentPicArr   详细图\n-  @apiSuccess {String}   results.nameBase   展览名\n-  @apiSuccess {String}   results.subName   展览副标题\n-  @apiSuccess {Array}   results.items   所有展览的展品\n-  @apiSuccess {String}   results.information   展览的详细\n-  @apiSuccess {String}   results.panoramic   展览的全景环绕\n-  @apiSuccess {Number}   results.entrancePrice   展览的门票\n-  @apiSuccess {Object}    results.coverUrl    封面\n-  @apiSuccess {Object}    results.recommended    精品推荐\n-  @apiSuccess {Object}    results.recommendLoc    本地推荐\n-  @apiSuccess {Object}    results.priceAddInfo    价格附加信息\n-  @apiSuccess {Object}    results.timeAddInfo    时间附加信息\n-  @apiSuccess {Object}    results.endTime    结束时间（iso）\n-  @apiSuccess {Object}    results.beginTime    开始时间（iso）\n-  @apiSuccess {String}     results.objectId          展览id\n- *\n- *\n-  @apiSuccessExample {json} Success-Response::\n- *HTTP/1.1 200\n-\n-{\n-    \"status\": true,\n-    \"results\": {\n-        \"contentPicArr\": [\n-            {\n-                \"name\": \"NF013.jpg\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/e81aa8175583aa80\"\n-            }\n-        ],\n-        \"coverUrl\": {\n-            \"name\": \"NF021.jpg\",\n-            \"url\": \"http://ac-lolnfdt5.clouddn.com/38c1778bde0919c4\"\n-        },\n-        \"objectId\": \"54b3a51de4b06e8b5a7fae79\",\n-        \"endTime\": {\n-            \"iso\": \"2015-01-09T12:59:00.000Z\",\n-            \"__type\": \"Date\"\n-        },\n-        \"priceAddInfo\": \"美元\",\n-        \"timeAddInfo\": \"123dTime123123\",\n-        \"entrancePrice\": 57,\n-        \"nameBase\": \"罗丹12\",\n-        \"gallery\": {\n-            \"address\": {\n-                \"citycode\": \"010\",\n-                \"address\": \"东长安街16号\",\n-                \"detailsAddress\": \"北京市北京市东城区东长安街16号中国国家博物馆\",\n-                \"name\": \"中国国家博物馆\",\n-                \"cityname\": \"北京市\",\n-                \"adname\": \"东城区\",\n-                \"pcode\": \"110000\",\n-                \"pname\": \"北京市\",\n-                \"adcode\": \"110101\"\n-            },\n-            \"objectId\": \"54b377f0e4b06e8b5a7cd4ca\",\n-            \"nameBase\": \"国家博物馆\"\n-        },\n-        \"information\": \"罗丹123123哈哈哈哈\",\n-        \"timeType\": 0,\n-        \"recommended\": 0,\n-        \"items\": [\n-            {\n-                \"contentPicArr\": [\n-                ],\n-                \"coverUrl\": {\n-                    \"name\": \"20111018184945804.jpg\",\n-                    \"url\": \"http://ac-lolnfdt5.clouddn.com/faf534d98160b734\"\n-                },\n-                \"creator\": \"我\",\n-                \"objectId\": \"54cf3ea8e4b0fe752ddce138\",\n-                \"nameBase\": \"展品展品\",\n-                \"information\": \"无\",\n-                \"recommended\": 0,\n-                \"largePicUrl\": {\n-                    \"name\": \"20111018184945804.jpg\",\n-                    \"url\": \"http://ac-lolnfdt5.clouddn.com/faf534d98160b734\"\n-                }\n-            }\n-        ],\n-        \"beginTime\": {\n-            \"iso\": \"2015-01-08T01:00:00.000Z\",\n-            \"__type\": \"Date\"\n-        },\n-        \"largePicUrl\": {\n-            \"name\": \"NF043.jpg\",\n-            \"url\": \"http://ac-lolnfdt5.clouddn.com/ce6cd181493646d2\"\n-        }\n-    }\n-}\n- */\n-\n-/**\n-   @apiDefine successLancher\n-  *\n-   @apiSuccess {String} results.lancherUrl 启动图片地址\n-  *\n-  *\n-   @apiSuccessExample {json} Success-Response::\n-  *HTTP/1.1 200\n-  {\n-     \"status\": true,\n-     \"results\": {\"lancherUrl\":\"http://ac-lolnfdt5.clouddn.com/2296d75ee46a14ff.jpg\"}\n-  }\n-*/\n-\n-\n-/**\n-  @apiDefine successExs\n- *\n-  @apiSuccess {Boolean} status 操作是否成功.\n-  @apiSuccess {Array}  results 展览信息.\n-  @apiSuccess {String}   results.nameBase   展览名\n-  @apiSuccess {String}   results.subName   展览副标题\n-  @apiSuccess {Object}   results.gallery   展览所在展馆\n-  @apiSuccess {Object}    results.coverUrl    封面\n-  @apiSuccess {Object}    results.videoUrl    视频地址\n-  @apiSuccess {String}     results.objectId          展览id\n-  @apiSuccess {String} count  数据总记录条数\n- *\n-  @apiSuccessExample {json} Success-Response::\n- *HTTP/1.1 200\n-     {\n-    \"status\": true,\n-    \"results\": [\n-        {\n-            \"coverUrl\": {\n-                \"name\": \"屏幕快照 2015-01-20 下午7.46.12.png\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/fabd8e61349b4f26\"\n-            },\n-            \"objectId\": \"54c1c705e4b09521168cd615\",\n-            \"subName\": \"——罗丹雕塑艺术回顾展\",\n-            \"nameBase\": \" 永远的思想者\",\n-            \"gallery\": {\n-                \"objectId\": \"54c1bc6ee4b09521168c5622\",\n-                \"nameBase\": \"中国国家博物馆\"\n-            }\n-        },\n-        {\n-            \"coverUrl\": {\n-                \"name\": \"IMG_1111.JPG\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/47a3e061b0fa5eff\"\n-            },\n-            \"objectId\": \"54d85daae4b0a1c73820159e\",\n-            \"subName\": \"长期陈列\",\n-            \"nameBase\": \"国博馆藏现代经典美术作品\",\n-            \"gallery\": {\n-                \"objectId\": \"54c1bc6ee4b09521168c5622\",\n-                \"nameBase\": \"中国国家博物馆\"\n-            }\n-        },\n-        {\n-            \"coverUrl\": {\n-                \"name\": \"084538xgrzlue41url4lg4.jpg\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/50ddacfafa5d6606\"\n-            },\n-            \"objectId\": \"54d99fe2e4b037f99ee417a0\",\n-            \"subName\": \"--专题陈列\",\n-            \"nameBase\": \"中国古代佛造像艺术展\",\n-            \"gallery\": {\n-                \"objectId\": \"54c1bc6ee4b09521168c5622\",\n-                \"nameBase\": \"中国国家博物馆\"\n-            }\n-        },\n-        {\n-            \"coverUrl\": {\n-                \"name\": \"IMG_1118.JPG\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/4daac01697653fb1\"\n-            },\n-            \"objectId\": \"54d96c8be4b037f99ee02982\",\n-            \"subName\": \"--中国明清家具珍品\",\n-            \"nameBase\": \"大美木艺\",\n-            \"gallery\": {\n-                \"objectId\": \"54c1bc6ee4b09521168c5622\",\n-                \"nameBase\": \"中国国家博物馆\"\n-            }\n-        },\n-        {\n-            \"coverUrl\": {\n-                \"name\": \"d7eb42a49bb90b58a10d56852cb35d5d.jpeg\",\n-                \"url\": \"http://ac-lolnfdt5.clouddn.com/e194e7164043ad9d.jpeg\"\n-            },\n-            \"objectId\": \"55068c07e4b0c9cd54e25a56\",\n-            \"subName\": \"测试\",\n-            \"nameBase\": \"齐白石画展\",\n-            \"gallery\": {\n-                \"objectId\": \"54cf07eae4b0fe752dd814d5\",\n-                \"nameBase\": \"中央美术学院美术馆\"\n-            }\n-        }\n-    ]\n-}\n-*/\n-/**\n-  @apiDefine successItem\n- *\n- *\n-  @apiSuccess {Boolean} status 操作是否成功.\n-  @apiSuccess {Object}  results 展览信息.\n-  @apiSuccess {Array}   results.contentPicArr   详细图\n-  @apiSuccess {Array}   results.nameBase   展品名\n-  @apiSuccess {Array}   results.items   所有展览的展品\n-  @apiSuccess {Object}    results.coverUrl    封面\n-  @apiSuccess {Object}    results.creator    作者\n-  @apiSuccess {Object}    results.videoUrl    视频地址\n-  @apiSuccess {Object}    results.information    作者\n-  @apiSuccess {Object}    results.largePicUrl    大图\n-  @apiSuccess {String}    results.creationTime    创作时间\n-  @apiSuccess {String}     results.objectId          展品id\n- *\n- *\n-  @apiSuccessExample {json} Success-Response::\n- *HTTP/1.1 200\n-{\n-  \"status\": true,\n-  \"results\": [\n-    {\n-      \"creationTime\": \"时间23\",\n-      \"contentPicArr\": [],\n-      \"coverUrl\": {\n-        \"name\": \"NM108.jpg\",\n-        \"url\": \"http://ac-lolnfdt5.clouddn.com/20350bc1e06c1c85\"\n-      },\n-      \"creator\": \"罗丹\",\n-      \"objectId\": \"54b478dfe4b06e8b5a87c645\",\n-      \"nameBase\": \"雕塑1\",\n-      \"information\": \"罗丹雕塑吊炸天\",\n-      \"recommended\": 0,\n-      \"largePicUrl\": {\n-        \"name\": \"NM090.jpg\",\n-        \"url\": \"http://ac-lolnfdt5.clouddn.com/f62499727b27658f\"\n-      }\n-    }\n-  ]\n-}\n- */\n-\n-/**\n-  @apiDefine successCity\n- *\n-  @apiSuccess {Boolean} status 操作是否成功.\n-  @apiSuccess {Object}  results 展览信息.\n-  @apiSuccess {Array}   results.citys   可用城市\n- *\n-  @apiSuccessExample {json} Success-Response::\n- *HTTP/1.1 200\n-{\n-  \"status\": true,\n-  \"results\": {\n-    \"updatedAt\": \"2015-01-23T03:51:31.087Z\",\n-    \"ukey\": \"city\",\n-    \"createdAt\": \"2015-01-23T03:51:12.291Z\",\n-    \"citys\": [\n-      \"北京市\",\n-      \"厦门市\"\n-    ],\n-    \"objectId\": \"54c1c530e4b088dfb16721eb\"\n-  }\n-}\n-*/\n-/**\n-  @apiDefine successUser\n- *\n-  @apiSuccess {Boolean} status 操作是否成功.\n-  @apiSuccess {Object}  results 用户信息.\n-  @apiSuccess {String} results.easemobPwd 环信密码.\n-  @apiSuccess {String} results.easemob 环信UUID.\n-\n- *\n-  @apiSuccessExample {json} Success-Response::\n- *HTTP/1.1 200\n-  {\n-      \"status\": true,\n-      \"results\": {\n-          \"authData\": {\n-              \"weixin\": {\n-                  \"openid\": \"o2DqTtwt_9thVO0aaZVeZJOTuX6w\",\n-                  \"access_token\": \"123\",\n-                  \"expires_in\": 123\n-              }\n-          },\n-          \"sex\": 1,\n-          \"ACL\": {\n-              \"*\": {\n-                  \"write\": true,\n-                  \"read\": true\n-              }\n-          },\n-          \"nickname\": \"彳亍\",\n-          \"city\": \"Liaocheng\",\n-          \"username\": \"sza2mfqt3fli1i9u3pt5va2o1\",\n-          \"headimgurl\": \"http://wx.qlogo.cn/mmopen/Q3auHgzwzM5LS8V8oH46GEq93iaGLWVMDGUiaArrFDAD0jiayH2nQ0LmwkVt9QjnZL8n4XY9icItj1YqwJQ2ThZciag/0\",\n-          \"emailVerified\": false,\n-          \"language\": \"zh_CN\",\n-          \"country\": \"CN\",\n-          \"mobilePhoneVerified\": false,\n-          \"easemob\": \"386a7e1a-12b2-11e5-add7-834367b38acc\",\n-          \"easemobPwd\": \"1fc28a82e584e7d84a3f2c1d8f419fae\"\n-      }\n-  }\n-*/\n-\n-/**\n- * @apiDefine login after login User access only\n- * after login User access only\n- */\n-module.exports = (app)->\n-\n-\n-\n-  /**\n-  * @api {get} /Api/static  系统静态变量\n-  * @apiVersion 0.1.0\n-  * @apiParam {String}[platform=ios] platform 指定平台, ios平台需要指定.\n-  * @apiName static\n-  * @apiGroup system\n-  * @apiDescription 移动端系统\n-  *\n-  * @apiExample Example usage:\n-  * curl -X GET http://dev.knowhere.avosapps.com/Api/static\n-  *\n-  * @apiUse systemStatic\n-  */\n-  app.get '/Api/static',(req,res)->\n-    {platform,version} = req.query\n-    if platform === \"ios\" and version===\"1.2.7\" then\n-      result = {\"login\":\"no\"}\n-    else\n-      result = {\"login\":\"yes\"}\n-\n-    res.json status:true,result:result\n-\n-  /**\n-   * @api {get} /Api/gallery/recommend  画廊推荐\n-   * @apiVersion 0.1.0\n-   * @apiName galleryRecommend\n-   * @apiGroup Gallery\n-   * @apiDescription 画廊推荐\n-   *\n-   * @apiParam {String}[limit=100] limit 取多少个.\n-   * @apiParam {String}[skip=0] skip 跳过多少个.\n-   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).\n-   * @apiParam {String=en}[lang] 语言\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/gallery/recommend?limit=10&skip=10\n-   *\n-   * @apiUse successGalleryRecommand\n-   */\n-  app.get '/Api/gallery/recommend',(req,res)->\n-    {limit,skip,city,lang,sessionToken} = req.query\n-    data ={}\n-    data.include=galleryInclude\n-    data.limit = limit if limit\n-    data.skip = skip if skip\n-    data.where = {recommended:{$gt:0},deleted:$ne:1}\n-    data.where.'address.cityname' = city if city&&city!=\"全部\"\n-    data.order = \"-recommended\"\n-    data.order = '-recommended,-recommendLoc'  if city&&city!=\"全部\"\n-    send \"classes/Gallery\",data,\"GET\",->\n-      galleryResult = &0.results\n-      galleryResult.forEach (item)->\n-        /*length = item*/\n-        debug \"exhibitionAll 's length : #{JSON.stringify item,'','\\t'}\"\n-        item.exCount = item.exhibitionAll?.length || 0\n-        item.createdAt = (new Date item.createdAt).getTime!\n-        item\n-      galleryResult = galleryRecommandFilter galleryResult,lang\n-      #合并收藏数据\n-      checkUserFavorite sessionToken,\"UserFavoriteGallery\",galleryResult,(galleryData)->\n-       res.json status:true,results:galleryData\n-    ,->\n-      res.json status:false,results:&0.responseText\n-\n-  /**\n-   * @api {get} /Api/defaultLancher  取得应用启动图\n-   * @apiVersion 0.1.0\n-   * @apiName defaultLandher\n-   * @apiGroup system\n-   * @apiDescription 系统接口，取得应用启动图\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/defaultLancher\n-   *\n-   * @apiUse successLancher\n-   */\n-  app.get '/Api/defaultLancher', (req, res)->\n-    send \"classes/Lancher\",{order:\"-default\",limit:1},\"GET\",(lancher)->\n-\n-      lancherUrl = if lancher.results.length> 0\n-                   then  lancher.results[0].lancherUrl.url\n-                   else \"\"\n-\n-      res.json status:true,results:{lancherUrl:lancherUrl}\n-    ,(err)->\n-      res.json status:false,results:&0.responseText\n-\n-  /**\n-   * @api {get} /Api/gallery/list  画廊列表\n-   * @apiVersion 0.1.0\n-   * @apiName galleryList\n-   * @apiGroup Gallery\n-   * @apiDescription 画廊列表\n-   *\n-   * @apiParam {String}[limit=100] limit 取多少个.\n-   * @apiParam {String}[skip=0] skip 跳过多少个.\n-   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).\n-   * @apiParam {String=en}[lang] 语言\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/gallery/list?limit=10&skip=10\n-   *\n-   * @apiUse successGalleryRecommand\n-   */\n-  app.get '/Api/gallery/list',(req,res)->\n-    {limit,skip,city,lang} = req.query\n-    data ={}\n-    data.include=galleryInclude\n-    data.limit = limit if limit\n-    data.skip = skip if skip\n-    data.where = {deleted:$ne:1}\n-    data.where.'address.cityname' = city if city&&city!=\"全部\"\n-    data.order = \"-recommended\"\n-    data.order = '-recommended,-recommendLoc'  if city&&city!=\"全部\"\n-    send \"classes/Gallery\",data,\"GET\",->\n-      &0.results.forEach (item)->\n-        item.exCount = item.exhibitionAll?.length || 0\n-        item.createdAt = (new Date item.createdAt).getTime!\n-      res.json status:true,results: galleryRecommandFilter &0.results,lang\n-    ,->\n-      res.json status:false,results:&0.responseText\n-\n-  /**\n-   * @api {get} /Api/exhibition/recommend  展览推荐\n-   * @apiVersion 0.1.0\n-   * @apiName exhibitionRecommend\n-   * @apiGroup Exhibition\n-   * @apiDescription 展览推荐\n-   *\n-   * @apiParam {String}[limit=100] limit 取多少个.\n-   * @apiParam {String}[skip=0] skip 跳过多少个.\n-   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).\n-   * @apiParam {String=en}[lang] 语言\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/recommend?limit=10&skip=10\n-   *\n-   * @apiUse successExs\n-   */\n-  app.get '/Api/exhibition/recommend',(req,res)->\n-    {limit,skip,city,lang,sessionToken} = req.query\n-    data ={}\n-    data.include=exhibitionListInclude\n-    data.limit = limit if limit\n-    data.skip = skip if skip\n-    data.where = {deleted:$ne:1}\n-    if city&&city!=\"全部\"\n-      data.where.'$or' = [{recommended:{$gt:0}},{recommendLoc:{$gt:0}}]\n-      data.where['gallery'] = $inQuery:\n-        className:\"Gallery\"\n-        where:\n-          'address.cityname':city\n-      data.order = '-recommended,-recommendLoc'\n-    else\n-      data.where.recommended = {$gt:0}\n-      data.order = \"-recommended\"\n-    data.count = 1\n-    tempT =  Math.round new Date!.getTime! /1000\n-    debug \"startSend\",tempT\n-    send \"classes/Exhibition\",data,\"GET\",->\n-      exhibitionData = exRecommandFilter &0.results,lang\n-      exhibitionData = exhibitionData.map (item)->\n-                        item.end = 0 # 常展为 1\n-                        item.createdAt = (new Date item.createdAt).getTime!\n-                        if item.timeType === 0 then\n-                          beginTime = (new Date item.beginTime.iso).getTime! / 1000\n-                          endTime = (new Date item.endTime.iso).getTime! / 1000 + ((23*60 + 59) * 60)\n-                          if beginTime >= tempT\n-                            item.end = 0\n-                          else\n-                            item.end = if beginTime <= tempT and endTime <= tempT\n-                                       then 1\n-                                       else 0\n-                        delete item.beginTime\n-                        delete item.endTime\n-                        item\n-      count = &0.count\n-      checkUserFavorite sessionToken,\"UserFavoriteExhibition\",exhibitionData,(data)->\n-        res.json status:true,results:data,count:count\n-    ,->\n-      res.json status:false,results:&0.responseText\n-\n-  /**\n-  * @api {GET}/Api/exihbition/:eid/comment 查看指展览的评论\n-  * @apiVersion 0.1.0\n-  * @apiName commentsGetter\n-  * @apiGroup Exhibition\n-  * @apiDescription 查看指展览的评论\n-  *\n-  * @apiParam {String}[limit=100] limit 取多少个.\n-  * @apiParam {String}[skip=0] skip 跳过多少个.\n-  * @apiParam {String}[sessionToken] sessionToken 用户授权码\n-  *\n-  * @apiExample Example usage:\n-  * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/xxxx/comment?limit=10&skip=10\n-  */\n-  app.get '/Api/exhibition/:eid/comment',(req,res)->\n-    {limit,skip,sessionToken}=req.query\n-    eid = req.params.eid\n-    commentsGetter eid,limit,skip,sessionToken\n-      .then ->\n-        res.json status:true,results:&0,count:&1\n-      ->\n-        res.json status:false,results:&0\n-\n-\n-  /**\n-   * @api {POST}/Api/comment/:cid/good 给指定评论打赞\n-   * @apiVersion 0.1.0\n-   * @apiName commentsGetter\n-   * @apiGroup Exhibition\n-   * @apiDescription 评论点赞\n-   * @apiParam cid 评论ID\n-   * @apiParam {String}[sessionToken] 用户登录授权\n-   * @apiParam {String}[op] 操作代码 1:为收藏 0:取消收藏\n-  */\n-  app.post '/Api/comment/:cid/good',(req,res)->\n-    {op,sessionToken} = req.body\n-    cid = req.params.cid\n-    commentsGood sessionToken,cid,op\n-      .then ->res.json status:true,results:&0\n-      ,-> res.json status:false,results:&0\n-\n-  #查看指定的展品评论\n-  app.get '/Api/item/:itemId/comment',(req,res)->\n-    {limit,skip,sessionToken}=req.query\n-    itemId = req.params.itemId\n-    commentsGetter itemId,limit,skip,sessionToken\n-      .then ->\n-        res.json status:true,results:&0,count:&1\n-      ->\n-        res.json status:false,results:&0\n-  /**\n-    * @api {POST}/Api/item/:itemId/comment 发布指定展品评论\n-    * @apiVersion 0.1.0\n-    * @apiName ItemComment\n-    * @apiGroup ExhibitionItem\n-    * @apiDescription 发布指定展品评论\n-    *\n-    * @apiParam {String}[sessionToken] 用户登录授权\n-    * @apiParam {String}[content] 评论内容\n-    */\n-  app.post '/Api/item/:itemId/comment',(req,res)->\n-   {content,sessionToken} = req.body\n-   itemId = req.params.itemId\n-   joi.validateID itemId,res,->\n-     checkSessionToken sessionToken\n-      .try (user)->\n-        #查找展品\n-        _p = new AV.Promise!\n-        send \"classes/Item/#{itemId}\",{include:\"exhibition,contentPicArr,coverUrl,gallery\"},\"GET\",->\n-          itemInfo = &0;\n-          debug \"get Item Info #{JSON.stringify itemInfo}\"\n-          if itemInfo !== {}\n-            exhibition = exRecommandFilter itemInfo.exhibition,undefined\n-            delete exhibition.items\n-            itemInfo.exhibition = exhibition\n-            debug \"exhibition Id : #{itemId} info:#{JSON.stringify exhibition,'','\\t'}\"\n-            _p.resolve itemInfo,user\n-          else\n-            _p.reject {} #找不到展品\n-        ,->\n-          #查看展品失败\n-          p.reject {}\n-        _p\n-      .try (itemInfo,user)->\n-        comment = {}\n-        comment.userId = user\n-        comment.parentId = itemId\n-        itemInfo.type = \"items\"\n-        comment.parentInfo = itemInfo\n-        comment.content = content\n-        send \"classes/Comment\",comment,\"POST\",->\n-          res.json status:true,results:&0\n-        ,->\n-          res.json status:false,results:&0.responseText\n-      .catch ->\n-        res.json status:false,results:\"登录失败\"\n-\n-\n-\n-  /**\n-    * @api {POST}/Api/exihbition/:eid/comment 发布指定展览评论\n-    * @apiVersion 0.1.0\n-    * @apiName commentsGetter\n-    * @apiGroup Exhibition\n-    * @apiDescription 发布指定展览评论\n-    *\n-    * @apiParam {String}[sessionToken] 用户登录授权\n-    * @apiParam {String}[content] 评论内容\n-    */\n-  app.post '/Api/exhibition/:eid/comment',(req,res)->\n-   {content,sessionToken} = req.body\n-   eid = req.params.eid\n-   joi.validateID eid,res,->\n-     checkSessionToken sessionToken\n-      .try (user)->\n-        _p = new AV.Promise!\n-        send \"classes/Exhibition/#{eid}\",{include:\"gallery\"},\"GET\",->\n-          exhibition = exRecommandFilter &0,undefined\n-          delete exhibition.items\n-          debug \"exhibition Id : #{eid} info:#{JSON.stringify exhibition,'','\\t'}\"\n-          _p.resolve user,exhibition\n-        ,->\n-          _p.reject \"找不到展览\"\n-        _p\n-      .try (user,exhibitionInfo)->\n-        comment = {}\n-        comment.userId = user\n-        comment.parentId = eid\n-        exhibitionInfo.type = \"exhibition\"\n-        comment.parentInfo = exhibitionInfo\n-        comment.content = content\n-        send \"classes/Comment\",comment,\"POST\",->\n-          res.json status:true,results:&0\n-        ,->\n-          res.json status:false,results:&0.responseText\n-      .catch ->\n-        res.json { status:false,results:\"登录失败\"}\n-\n-  /**\n-  * @api {GET} /Api/ibeacon  云子iBeacon推送\n-  * @apiVersion 0.1.0\n-  * @apiName IbeaconNoticatifer\n-  * @apiGroup Noticatifer\n-  * @apiDescription 云子iBeacon设备,发送请求后服务向设备发送推送\n-  *\n-  * @apiParam {String}[limit=100] limit 取多少个.\n-  * @apiParam {String}[skip=0] skip 跳过多少个.\n-  * @apiParam {String}[city=全部] city所在城市(高德地图城市名).\n-  * @apiParam {String=en}[lang] 语言\n-  *\n-  * @apiExample Example usage:\n-  * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/recommend?limit=10&skip=10\n-  *\n-  * @apiUse successExs\n-  */\n-  app.get '/Api/ibeacon',(req,res)!->\n-    {device_sn,device_tokens,isProductionModel,platform} = req.query\n-    whereObj = {}\n-    data = {}\n-    whereObj.[\"device_sn\"] = device_sn\n-    data.where = whereObj\n-    send \"classes/Item\",data,\"GET\",!->\n-      if &0.results.length >= 1 then\n-        item = &0.results[0]\n-        send \"classes/Exhibition/#{item.exhibition.objectId}\",{},\"GET\",->\n-          exhibition = &0\n-          debug \"from exhibition : #{JSON.stringify exhibition}\"\n-\n-          timeStamp = new Date!\n-\n-          info = {}\n-          isProductionModel = isProductionModel == \"\" ? \"false\" : \"true\"\n-\n-          if platform === \"ios\"\n-            info = {\n-              timestamp : timeStamp.getTime!\n-              device_tokens : device_tokens\n-              payload : {\n-                aps:{alert: item.nameBase,sound:\"default\"}\n-                display_type: 'notification'\n-              }\n-              jumpOther:\"item\"\n-              objectID:item.objectID\n-              exhibition_id:exhibition.objectID\n-              exhibition_Name:exhibition.nameBase\n-            }\n-            console.log \"publish info : #{JSON.stringify info}\"\n-            Noticatifer = new sdk({platform: 'ios',appKey: uMengAppKey, appMasterSecret: uMengAppSecret,productionMode: isProductionModel });\n-          else\n-            info = {\n-              timestamp : timeStamp.getTime!\n-              device_tokens : device_tokens\n-              payload : {\n-                body:{\n-                  ticker: item.nameBase\n-                  title:\"知亦行\"\n-                  text:item.nameBase\n-                  after_open: 'go_app'\n-                }\n-                extra:{\n-                  jumpOther:\"item\"\n-                  objectID:item.objectID\n-                  exhibition_id:exhibition.objectID\n-                  exhibition_Name:exhibition.nameBase\n-                }\n-              }\n-              display_type:\"notification\"\n-            }\n-            debug \"publish info : #{JSON.stringify info}\"\n-            Noticatifer = new sdk({platform: 'android',appKey: uMengAndroidAppKey, appMasterSecret: uMengAndroidMasterKey,productionMode: isProductionModel });\n-\n-          Noticatifer.unicast info,(err,httpResponse,result)!->\n-            if err\n-               console.log \"push Err :\"+JSON.stringify(err)\n-               res.json { status:false,results:err}\n-            else\n-               console.log \"push result :\"+JSON.stringify(result)\n-               res.json { status:true,results:\"success\"}\n-\n-      else\n-         res.json { status:false,results:\"not found device_sn\"}\n-    ,->\n-      res.json status:false,results:&0.responseText\n-\n-\n-  /**\n-   * @api {GET} /Api/ibeacon/desc 返回云子设备列表\n-   * @apiVersion 0.1.0\n-   * @apiName IbeaconDesc\n-   * @apiGroup Noticatifer\n-   * @apiDescription 输出云子设备所包含的所有及信息\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/ibeacon/desc\n-   *\n-  */\n-  app.get '/Api/ibeacon/desc',(req,res)->\n-    data ={}\n-    data.order = \"-sort\"\n-    send \"classes/Ibeacon\",data,\"GET\",(result)->\n-      res.json status:true,results:ibeaconFilter result.results,\"\"\n-    ,(err)->\n-      res.json status:false,results:err.responseText\n-\n-  /**\n-   * @api {POST} /Api/ibeacon  通过发送多个 device_sn ，返回多个展品信息\n-   * @apiVersion 0.1.0\n-   * @apiName ibeaconNoticatifer\n-   * @apiGroup Noticatifer\n-   * @apiDescription 按device_sn查询所绑定的内容\n-   *\n-   * @apiParam {String} device_sn 云子ibeacon设备 device_sn，多个以‘|’分隔\n-   *\n-   * @apiExample Example usage:\n-   * curl -X POST http://dev.knowhere.avosapps.com/Api/ibeacon\n-   * curl -X POST http://dev.krakenjs.avosapps.com/Api/ibeacon\n-   *\n-  */\n-  app.post '/Api/ibeacon',(req,res)->\n-    {device_sn} = req.body\n-    data = if (device_sn.indexOf '|') === -1\n-           then [device_sn]\n-           else device_sn.split '|'\n-\n-    condition = {}\n-    condition.include = \"exhibition\"\n-    condition.where={\"device_sn\":{\"$in\":data}}\n-    send \"classes/Item\",condition,\"GET\",(items)!->\n-\n-      itemData = items.results.map (item)->\n-        jumpOther:\"item\"\n-        objectId:item.objectId\n-        device_sn:item.device_sn\n-        item_nameBase:item.nameBase\n-        exhibition_objectId:item.exhibition.objectId\n-        exhibition_nameBase:item.exhibition.nameBase\n-\n-      res.json status:true results:itemData\n-    ,(err)!->\n-      res.json status:false,results:&0.responseText\n-\n-\n-\n-  /**\n-   * @api {get} /Api/exhibition/list  展览列表\n-   * @apiVersion 0.1.0\n-   * @apiName exhibitionList\n-   * @apiGroup Exhibition\n-   * @apiDescription 展览列表\n-   *\n-   * @apiParam {String}[limit=100] limit 取多少个.\n-   * @apiParam {String}[skip=0] skip 跳过多少个.\n-   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).\n-   * @apiParam {String=en}[lang] 语言\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/list?limit=10&skip=10\n-   *\n-   * @apiUse successExs\n-   */\n-  app.get '/Api/exhibition/list',(req,res)->\n-    {limit,skip,city,lang,sessionToken} = req.query\n-    data ={}\n-    data.include=exhibitionListInclude\n-    data.limit = limit if limit\n-    data.skip = skip if skip\n-    data.where = {deleted:$ne:1}\n-    data.count = 1\n-    if city&&city!=\"全部\"\n-      data.where['gallery'] = $inQuery:\n-        className:\"Gallery\"\n-        where:\n-          'address.cityname':city\n-      data.order = '-recommended,-recommendLoc'\n-    else\n-      data.order = \"-recommended\"\n-    tempT =  Date.now() / 1000\n-    debug \"startSend\",tempT\n-    send \"classes/Exhibition\",data,\"GET\",->\n-      debug \"first : #{JSON.stringify &0.results[0],'','\\t'}\"\n-      results = exRecommandFilter &0.results,lang\n-      results = results.map (item)->\n-                        item.end = 0 # 常展为 1\n-                        item.createdAt = (new Date item.createdAt).getTime!\n-                        if item.timeType === 0 then\n-                          beginTime = (new Date item.beginTime.iso).getTime! / 1000\n-                          endTime = (new Date item.endTime.iso).getTime! / 1000 + ((23*60 + 59) * 60)\n-                          if beginTime >= tempT\n-                            item.end = 0\n-                          else\n-                            item.end = if beginTime <= tempT and endTime <= tempT\n-                                       then 1\n-                                       else 0\n-                        /*debug \"beginTime : #{beginTime}\"\n-                        debug \"endTime : #{endTime}\"\n-                        debug \"tempT : #{tempT}\"*/\n-\n-                        delete item.beginTime\n-                        delete item.endTime\n-                        item\n-      #debug  \"beginTime\",Date.now() - tempT\n-      #debug  \"endTime\",Date.now()-tempT\n-      #results = exRecommandFilter &0.results,lang\n-      count = &0.count\n-      checkUserFavorite sessionToken,\"UserFavoriteExhibition\",results,(exhibitionResults)->\n-        res.json status:true,results: exhibitionResults,count:count\n-    ,->\n-      res.json status:false,results:&0.responseText\n-\n-  /**\n-   * @api {get} /Api/exhibition/:eid/favor  查看指展览的所有收藏用户\n-   * @apiVersion 0.1.0\n-   * @apiName exhibition favorite\n-   * @apiGroup Gallery\n-   * @apiDescription 所有收藏用户\n-   *\n-   * @apiParam {String}eid 展览id\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/54b3a51de4b06e8b5a7fae79/favorite\n-   */\n-  app.get '/Api/exhibition/:eid/favorite',(req,res)->\n-    {limit,skip} = req.query\n-    eid = req.params.eid\n-    data ={}\n-    data.order = \"-createdAt\"\n-    data.include =\"userId\"\n-    data.keys = \"userId\"\n-    data.limit = limit if limit\n-    data.skip = skip if skip\n-    data.where = {\"favorite\":{\"__type\": \"Pointer\",\"className\": \"Exhibition\",\"objectId\": eid}}\n-    data.count = 1\n-    send \"classes/UserFavoriteExhibition\",data,\"GET\", ->\n-      results = &0.results.map (item)-> item.userId\n-      results = userFilter results,undefined\n-      res.json status:true,results:results,count:&0.count\n-    ,->\n-      res.json status:false,results: &0.responseText\n-\n-\n-\n-  /**\n-   * @api {get} /Api/exhibition/:eid  单个展览详细\n-   * @apiVersion 0.1.0\n-   * @apiName exhibition detail\n-   * @apiGroup Gallery\n-   * @apiDescription 画廊推荐\n-   *\n-   * @apiParam {String}eid 展览id\n-   * @apiParam {String=en}[lang] 语言\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/54b3a51de4b06e8b5a7fae79?lang=en\n-   *\n-   * @apiUse successExhibition\n-   */\n-  app.get '/Api/exhibition/:eid',(req,res)->\n-    {lang,sessionToken} = req.query\n-    eid = req.params.eid\n-    exhibition eid,sessionToken\n-      .then -> res.json status:true,results: &0\n-      ,(err)-> res.json status:false,results: err\n-\n-\n-  /**\n-   * @api {get} /Api/user/:user_id/fans  查看某个用户的粉丝\n-   * @apiVersion 0.1.0\n-   * @apiName user fans\n-   * @apiGroup user\n-   * @apiDescription 查看某个用户的粉丝\n-   *\n-   * @apiParam {String}user_id 用户ID\n-   *\n-   */\n-  app.get '/Api/user/:user_id/fans',(req,res)->\n-    user_id = req.params.user_id\n-    getUserFollow user_id\n-      .then -> res.json status:true,results: &0\n-      ,(err)-> res.json status:false,results: err\n-\n-  /**\n-     * @api {get} /Api/user/:user_id/follow  查看某个用户的关注\n-     * @apiVersion 0.1.0\n-     * @apiName user follow\n-     * @apiGroup user\n-     * @apiDescription 查看某个用户的关注用户\n-     *\n-     * @apiParam {String}user_id 用户ID\n-     *\n-     */\n-  app.get '/Api/user/:user_id/follow',(req,res)->\n-    user_id = req.params.user_id\n-    getUserFans user_id\n-      .then -> res.json status:true,results: &0\n-      ,(err)-> res.json status:false,results: err\n-\n-\n-  /**\n-   * @api {get} /Api/user/:user_id  查看某个用户的关注\n-   * @apiVersion 0.1.0\n-   * @apiName user follow\n-   * @apiGroup user\n-   * @apiDescription 查看某个用户资料,用户要传有sessionToken 以判断 该ID 的用户是否好关系\n-   *\n-   * @apiParam {String} user_id 用户ID\n-   * @apiParam {String} sessionToken 用户要传有sessionToken当前登录用户授权码\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/user/54b3a51de4b06e8b5a7fae79?sessionToken=xxxx\n-   */\n-  app.get '/Api/user/:id',(req,res)->\n-    {sessionToken} = req.query\n-    user_id = req.params.id\n-    getUserInfo user_id,sessionToken\n-      .then -> res.json status:true,results: &0\n-      ,(err)-> res.json status:false,results: err\n-\n-\n-  /**\n-     * @api {POST} /Api/user/unfollow  取消关注某个用户\n-     * @apiVersion 0.1.0\n-     * @apiName user follow\n-     * @apiGroup user\n-     * @apiDescription 取消关注某个用户\n-     * @apiParam {String} user_id 用户ID\n-     * @apiParam {String} sessionToken 用户要传有sessionToken当前登录用户授权码\n-     */\n-  app.post '/Api/user/unfollow',(req,res)->\n-    {sessionToken,user_id} = req.body\n-    checkSessionToken sessionToken\n-      .then (user)->\n-        user.unfollow user_id\n-          .then -> res.json status:true,results: &0\n-          ,(followErr)-> res.json status:false,results: err\n-      ,(err)-> res.json status:false,results: err\n-\n-\n-  /**\n-   * @api {POST} /Api/user/follow  关注某个用户\n-   * @apiVersion 0.1.0\n-   * @apiName user follow\n-   * @apiGroup user\n-   * @apiDescription 关注某个用户\n-   * @apiParam {String}user_id 用户ID\n-   * @apiParam {String}sessionToken 用户要传有sessionToken当前登录用户授权码\n-   */\n-  app.post '/Api/user/follow',(req,res)->\n-    {sessionToken,user_id} = req.body\n-    checkSessionToken sessionToken\n-      .then (user)->\n-        user.follow user_id\n-          .then -> res.json status:true,results: &0\n-          ,(followErr)-> res.json status:false,results: err\n-      ,(err)-> res.json status:false,results: err\n-\n-  #查看某个用户的发布的评论\n-  app.get '/Api/user/:user_id/comment',(req,res)->\n-    {user_id,limit,skip} = req.query\n-    UserComment user_id,limit,skip\n-      .then ->\n-          res.json status:true,results:&0,count:&1\n-      ->\n-          res.json status:false,results:&0\n-\n-  #查看某个用户的收藏展览数据\n-  app.get '/Api/user/:user_id/favorExhibition',(req,res)->\n-    user_id = req.params.user_id\n-    {limit,skip} = req.query\n-    getUserFavoriteByUserId user_id,\"UserFavoriteExhibition\",limit,skip\n-      .try ->\n-        &0.forEach (item)->\n-          item.createdAt = (new Date item.createdAt).getTime!\n-          item.favorAt = (new Date item.favorAt).getTime!\n-          item.isFavor = 0\n-        res.json status:true,results:(exRecommandFilter &0,undefined),count:&1\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-  #查看某个用户的收藏 展馆数据\n-  app.get '/Api/user/:user_id/favorGallery',(req,res)->\n-    user_id = req.params.user_id\n-    {limit,skip} = req.query\n-    getUserFavoriteByUserId user_id,\"UserFavoriteGallery\",limit,skip\n-      .try ->\n-        &0.forEach (item)->\n-            item.exCount = item.exhibitionAll?.length || 0\n-            item.createdAt = (new Date item.createdAt).getTime!\n-            item.favorAt = (new Date item.favorAt).getTime!\n-            item.isFavor = 0\n-        res.json status:true,results: (galleryRecommandFilter &0,undefined),count:&1\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-  /**\n-   * @api {get} /Api/gallery/:gid/exhibition  单个展馆的所有展览\n-   * @apiVersion 0.1.0\n-   * @apiName  exhibition in gallery\n-   * @apiGroup Gallery\n-   * @apiDescription 展馆的所有展览\n-   *\n-   * @apiParam {String}gid 展馆id\n-   * @apiParam {String}[limit=100] limit 取多少个.\n-   * @apiParam {String}[skip=0] skip 跳过多少个.\n-   * @apiParam {String=en}[lang] 语言\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/gallery/54b377f0e4b06e8b5a7cd4ca/exhibition?limit=10&skip=10\n-   *\n-   * @apiUse successExhibition\n-   */\n-  app.get '/Api/gallery/:gid/exhibition',(req,res)->\n-    {limit,skip,lang,sessionToken} = req.query\n-    gid = req.params.gid\n-    joi.validateID gid,res,->\n-      o = {order:\"-updatedAt\",include:exhibitionInclude,where:{deleted:{$ne:1},workStep:1,\"$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"Gallery\",\"objectId\":gid},\"key\":\"exhibitionAll\"}}}\n-      o.limit = limit if limit\n-      o.skip = skip if skip\n-      send \"classes/Exhibition\"\n-      ,o\n-      ,\"GET\",->\n-        tempT =  Date.now() / 1000\n-        exhibitionData = []\n-        exhibitionData = exhibitionFilter &0.results,lang\n-        exhibitionData = exhibitionData.map (item)->\n-                        item.end = 0 # 常展为 1\n-                        item.createdAt = (new Date item.createdAt).getTime!\n-                        item.updatedAt = (new Date item.updatedAt).getTime!\n-                        if item.timeType === 0 then\n-                          beginTime = (new Date item.beginTime.iso).getTime! / 1000\n-                          endTime = (new Date item.endTime.iso).getTime! / 1000 + ((23*60 + 59) * 60)\n-                          if beginTime >= tempT\n-                            item.end = 0\n-                          else\n-                            item.end = if beginTime <= tempT and endTime <= tempT\n-                                       then 1\n-                                       else 0\n-                        delete item.beginTime\n-                        delete item.endTime\n-                        item\n-        checkUserFavorite sessionToken,\"UserFavoriteExhibition\",exhibitionData,(exhibitionResultsData)->\n-          res.json status:true,results:exhibitionResultsData\n-      ,->\n-        res.json status:false,results:&0.responseText\n-\n-\n-\n-\n-\n-  /**\n-   * @api {get} /Api/item/:item_id  查看单个展品的详细内容\n-   * @apiVersion 0.1.0\n-   * @apiName   item in exhibition\n-   * @apiGroup Gallery\n-   * @apiDescription 查看单个展品的详细内容\n-   *\n-   * @apiParam {String}item_id 展品ID\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/item/54b3a51de4b06e8b5a7fae79\n-   *\n-   * @apiUse successItem\n-   */\n-  app.get '/Api/item/:item_id',(req,res)->\n-    {lang} = req.query\n-    item_id = req.params.item_id\n-    joi.validateID item_id,res,->\n-      send \"classes/Item/#{item_id}\",{},\"GET\",(itemInfo)->\n-        #res.json status:true,results:itemFilter &0,lang\n-        debug \"itemInfo : #{JSON.stringify itemInfo}\"\n-        createdAt = (new Date itemInfo.createdAt).getTime!\n-        delete itemInfo.createdAt\n-        itemInfo.createdAt = createdAt\n-        if itemInfo==={} then\n-          res.json status:false result:\"展品不存在\"\n-        else\n-          send \"classes/Exhibition/#{itemInfo.exhibition.objectId}\",include:exhibitionInclude,\"GET\",->\n-            item={}\n-            #exhibition = exhibitionFilter &0,lang\n-            item = itemFilter itemInfo,lang\n-            #item.exhibition = exhibition\n-            res.json status:true,results: item\n-          ,->\n-            res.json status:false,results:&0.responseText\n-      ,->\n-        res.json status:false,results:&0.responseText\n-\n-\n-\n-  /**\n-   * @api {get} /Api/exhibition/:gid/item  单个展览的所有展品\n-   * @apiVersion 0.1.0\n-   * @apiName   items in exhibition\n-   * @apiGroup Gallery\n-   * @apiDescription 单个展览的所有展品\n-   *\n-   * @apiParam {String}eid 展览id\n-   * @apiParam {String}[limit=500] limit 取多少个.\n-   * @apiParam {String}[skip=0] skip 跳过多少个.\n-   * @apiParam {String=en}[lang] 语言\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/54b3a51de4b06e8b5a7fae79/item?limit=10&skip=10\n-   *\n-   * @apiUse successItem\n-   */\n-  app.get '/Api/exhibition/:eid/item',(req,res)->\n-    {limit,skip,lang} = req.query\n-    eid = req.params.eid\n-    joi.validateID eid,res,->\n-      o = {include:itemInclude,where:{\"$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"Exhibition\",\"objectId\":eid},\"key\":\"items\"}}}\n-      o.limit = if limit then limit else 500\n-      o.skip = skip if skip\n-      o.order =\"-sort,createdAt\"\n-      send \"classes/Item\"\n-      ,o\n-      ,\"GET\",->\n-        itemInfo = itemFilter &0.results,lang\n-        debug \"itemInfo : #{itemInfo}\"\n-        itemInfo.sort = 0 if itemInfo.sort === \"\"\n-        res.json status:true,results:itemInfo\n-      ,->\n-        res.json status:false,results:&0.responseText\n-\n-  /**\n-   * @api {get} /Api/availableCity 可用城市\n-   * @apiVersion 0.1.0\n-   * @apiName   city available\n-   * @apiGroup Other\n-   * @apiDescription 所以已经录入的城市\n-   *\n-   * @apiExample Example usage:\n-   * curl -X GET http://dev.knowhere.avosapps.com/Api/availableCity\n-   *\n-   * @apiUse successCity\n-   */\n-  app.get '/Api/availableCity',(req,res)->\n-    send \"classes/Address\",{ukey:\"city\"},\"GET\"\n-    ,->\n-      debug \"availableCity\", &0.results[0]\n-      res.json status:true,results:cityFilter &0.results[0],undefined\n-    ,->\n-      res.json status:false,results:&0.responseText\n-  /**\n-    @api {get} /Api/user/logout  User logout\n-    @apiVersion 0.1.0\n-    @apiName logout\n-    @apiGroup User\n-    @apiPermission login\n-\n-    @apiDescription 用户注销\n-\n-    @apiExample Example usage:\n-    curl -i http://dev.knowhere.avosapps.com/Api/user/logout\n-\n-    @apiSuccess {Boolean} status 操作是否成功.\n-    @apiSuccess {Boolean}  results\n-    @apiSuccessExample {json} Success-Response::\n-    {\n-      \"status\": true,\n-      \"results\": true\n-    }\n-   */\n-  app.get '/Api/user/logout', (req, res)->\n-    #avosExpressCookieSession将自动清除登录cookie信息\n-      AV.User.logOut()\n-      #res.redirect('/profile')\n-      res.json status:true,results:true\n-\n-  /**\n-    @api {get} /Api/user/comment  用户评论列表\n-    @apiVersion 0.1.0\n-    @apiName UserComment\n-    @apiGroup User\n-    @apiPermission login\n-    @apiDescription 查看用户评论列表\n-    @apiParam {String} sessionToken 用户登录授权码\n-    @apiExample Example usage:\n-    curl -i http://dev.knowhere.avosapps.com/Api/user/comment\n-   */\n-  app.get '/Api/user/comment/list',(req,res)->\n-    {limit,skip,sessionToken}=req.query\n-    UserCommentGetter sessionToken,limit,skip\n-      .then -> res.json status:true,results:&0,count:&1\n-      ,-> res.json status:false,results:&0\n-\n-  #删除评论\n-  app.post '/Api/user/comment/:commentId/remove',(req,res)->\n-    {sessionToken} = req.body\n-    commentId = req.params.commentId\n-    removeUserCommentBySessionToken sessionToken,commentId\n-      .then -> res.json status:true\n-      ,-> res.json status:false,results:&0\n-\n-\n-\n-  /**\n-    @api {post} /Api/user/auth 第三方帐号登陆\n-    @apiVersion 0.1.0\n-    @apiName weixinLogin\n-    @apiGroup User\n-    @apiDescription 登陆\n-\n-    @apiParam {String} country 国家.\n-    @apiParam {String} city 城市.\n-    @apiParam {Number=1,2} sex 性别\n-    @apiParam {String} openid openid.微博用户是uid\n-    @apiParam {String} nickname 用户昵称.\n-    @apiParam {String} language 语言.\n-    @apiParam {String} [location] 地区\n-    @apiParam {String} headimgurl 头像.\n-    @apiParam {String=weibo,weixin,qq} [platform=weixin] 平台.\n-\n-    @apiExample {curl} Example usage:\n-    curl -X POST http://dev.knowhere.avosapps.com/Api/user/auth -d openid=o2DqTtwt_9thVO0aaZVeZJOTuX6w\n-    @apiUse successUser\n-   */\n-  app.post \"/Api/user/auth\",(req,res)->\n-    debug \"auth\",req.body,req.query\n-\n-\n-    joi.validateweixin req.body,res,(err,data)->\n-\n-      res.json status:false,results:err if err\n-\n-      /*openid = data.openid\n-      if data.platform === \"qq\"\n-        openid = Date.now().toString(16)\n-        md5 = crypto.createHash \"md5\"\n-        md5.update pass\n-        openid = md5.digest \"hex\"*/\n-\n-      authData = authorMap[data.platform](data.openid)\n-\n-      debug \"authData : #{JSON.stringify authData}\"\n-\n-      AV.User._logInWith(data.platform,authData)\n-      .try (user)->\n-      # 返回绑定后的用户\n-        /*debug \"currentUser #{user}\"\n-        debug \"user.get('sex') #{user.get('sex')}\"\n-        debug \"_sessionToken : #{user._sessionToken}\"*/\n-        if !user.get('sex')\n-          for k,v of data\n-            user.set k,v if k!= 'openid'\n-          user.setACL(new AV.ACL(AV.User.current()));\n-        AV.Promise.as(user)\n-        #user.set \"email\",data.email if data.email\n-      .try (user)->\n-        debug \"user.get('easemob') #{user.get('easemob')}\"\n-        if !user.get('easemob')\n-          p = new AV.Promise()\n-          pass = user.id+Date.now().toString(16)\n-          md5 = crypto.createHash \"md5\"\n-          md5.update pass\n-          pass = md5.digest \"hex\"\n-          debug \"~~~before create\",user.get('username'),pass,user.get('nickname')\n-          easemob.userCreate user.get('username'),pass,user.get('nickname')||\"用户\",(err,data)->\n-            debug \"easemob.userCreate\",err,data\n-            return  p.reject err if err\n-            user.set 'easemob',data['entities'][0]['uuid']\n-            user.set 'easemobPwd',pass\n-            p.resolve user\n-          return p\n-        else\n-          AV.Promise.as user\n-      .try (user)->\n-        debug \"saveUserInfo #{JSON.stringify user}\"\n-        debug \"user.dirty  #{user.dirty!}\"\n-        if user.dirty!\n-          user.save()\n-        else\n-          AV.Promise.as user\n-      .try (user)->\n-          debug \"xx\",arguments\n-          _user = user.attributes\n-          _user.objectId = user.id\n-          _user.sessionToken = user._sessionToken\n-          res.json status:true,results:_user\n-      .catch (err)->\n-          debug \"Error Auth:#{JSON.stringify err}\"\n-          res.json status:false,results:err.responseText||err\n-\n-\n-  /**\n-    @api {post} /Api/user/favor/exhibition 添加收藏展览\n-    @apiVersion 0.1.0\n-    @apiName addUserFavoriteExhibition\n-    @apiGroup User\n-    @apiDescription 添加收藏展览\n-    @apiParam {String} sessionToken 登录授权.\n-    @apiParam {String} exhibition_id 展览ID.\n-   */\n-  app.post '/Api/user/favor/exhibition',(req,res)->\n-    debug \"favor : #{JSON.stringify req.body}\"\n-    {sessionToken,exhibition_id} = req.body\n-    #添加收藏\n-    addUserFavorite sessionToken,\"UserFavoriteExhibition\",\"Exhibition\",exhibition_id\n-      .try -> res.json status:true,results:&0\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-\n-  /**\n-    @api {get} /Api/user/favor/exhibition 查询用户的收藏展览列表\n-    @apiVersion 0.1.0\n-    @apiName getUserFavoriteExhibition\n-    @apiGroup User\n-    @apiDescription 查询用户的收藏列表\n-    @apiParam {String} sessionToken 登录授权.\n-   */\n-  app.get '/Api/user/favor/exhibition',(req,res)->\n-    debug \"favor : #{JSON.stringify req.query}\"\n-    {sessionToken,limit,skip} = req.query\n-    #查看收藏\n-    getUserFavorite sessionToken,\"UserFavoriteExhibition\",limit,skip\n-      .try ->\n-        &0.forEach (item)->\n-          item.createdAt = (new Date item.createdAt).getTime!\n-          item.favorAt = (new Date item.favorAt).getTime!\n-          item.isFavor = 1\n-        res.json status:true,results:(exRecommandFilter &0,undefined),count:&1\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-\n-  /**\n-    @api {post} /Api/user/favor/exhibition/remove 取消收藏展览\n-    @apiVersion 0.1.0\n-    @apiName removeUserFavoriteExhibition\n-    @apiGroup User\n-    @apiDescription 取消收藏展览\n-    @apiParam {String} sessionToken 登录授权.\n-    @apiParam {String} exhibition_id 展览ID.\n-   */\n-  app.post '/Api/user/favor/exhibition/remove',(req,res)->\n-    debug \"favor : #{JSON.stringify req.body}\"\n-    {sessionToken,exhibition_id} = req.body\n-    removeUserFavorite sessionToken,\"UserFavoriteExhibition\",\"Exhibition\",exhibition_id\n-      .try -> res.json status:true\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-  /**\n-    @api {post} /Api/user/favor/gallery 添加展馆收藏\n-    @apiVersion 0.1.0\n-    @apiName addUserFavoriteGallery\n-    @apiGroup User\n-    @apiDescription 展馆收藏\n-    @apiParam {String} sessionToken 登录授权.\n-    @apiParam {String} gallery_id 展馆ID.\n-\n-   */\n-  app.post '/Api/user/favor/gallery',(req,res)->\n-    debug \"favor : #{JSON.stringify req.body}\"\n-    {sessionToken,gallery_id} = req.body\n-    addUserFavorite sessionToken,\"UserFavoriteGallery\",\"Gallery\",gallery_id\n-      .try -> res.json status:true,results:&0\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-\n-  /**\n-    @api {post} /Api/user/favor/gallery/remove 取消收藏的展馆\n-    @apiVersion 0.1.0\n-    @apiName removeUserFavoriteGallery\n-    @apiGroup User\n-    @apiDescription 取消收藏展馆\n-    @apiParam {String} sessionToken 登录授权.\n-    @apiParam {String} gallery_id 展馆ID.\n-   */\n-  app.post '/Api/user/favor/gallery/remove',(req,res)->\n-    debug \"favor : #{JSON.stringify req.body}\"\n-    {sessionToken,gallery_id} = req.body\n-    #添加收藏\n-    removeUserFavorite sessionToken,\"UserFavoriteGallery\",\"Gallery\",gallery_id\n-      .try -> res.json status:true,results:&0\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-  /**\n-    @api {get} /Api/user/favor/gallery 查询用户的收藏展馆列表\n-    @apiVersion 0.1.0\n-    @apiName getUserFavoriteGallery\n-    @apiGroup User\n-    @apiDescription 查询用户的收藏展馆列表\n-    @apiParam {String} sessionToken 登录授权.\n-    @apiParam {String} skip 略过数量\n-    @apiParam {String} limit 输出限制.\n-   */\n-  app.get '/Api/user/favor/gallery',(req,res)->\n-    debug \"favor : #{JSON.stringify req.query}\"\n-    {limit,skip,sessionToken} = req.query\n-    #查看收藏\n-    getUserFavorite sessionToken,\"UserFavoriteGallery\",limit,skip\n-      .try ->\n-        &0.forEach (item)->\n-            item.exCount = item.exhibitionAll?.length || 0\n-            item.createdAt = (new Date item.createdAt).getTime!\n-            item.favorAt = (new Date item.favorAt).getTime!\n-            item.isFavor = 1\n-        res.json status:true,results: (galleryRecommandFilter &0,undefined),count:&1\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-  /**\n-    @api {post} /Api/user/resetPassword 修改用户密码\n-    @apiVersion 0.1.0\n-    @apiName resetPassword\n-    @apiGroup User\n-    @apiDescription 修改用户密码\n-    @apiParam {String} sessionToken 登录授权.\n-    @apiParam {String} newpwd 新密码.\n-    @apiParam {String} oldpwd 旧密码.\n-   */\n-  app.post '/Api/user/resetPassword',(req,res)->\n-    {oldpwd,newpwd,sessionToken} = req.body\n-    # 以旧密码确认的方式修改用户密码\n-    resetPassword sessionToken,oldpwd,newpwd\n-      .try -> res.json status:true,results:&0\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-  /**\n-    @api {post} /Api/user/forgetPassword 忘记(找回)用户密码\n-    @apiVersion 0.1.0\n-    @apiName forgetPassword\n-    @apiGroup User\n-    @apiDescription 忘记(找回)用户密码\n-    @apiParam {String} mobile 手机号码.\n-    @apiParam {String} verifycode 短信验证码.\n-    @apiParam {String} newpwd 新密码.\n-   */\n-  app.post '/Api/user/forgetPassword',(req,res)->\n-    {mobile,verifycode,newpwd,isDebug} = req.body\n-    forgetPassword mobile,verifycode,isDebug,newpwd\n-      .try -> res.json status:true,results:&0\n-      .catch -> res.json status:false,results:&0.responseText\n-\n-\n-  /**\n-    @api {post} /Api/user/modify 修改用户资料\n-    @apiVersion 0.1.0\n-    @apiName modifyUserInfo\n-    @apiGroup User\n-    @apiDescription 修改用户性别,昵称及头像等数据\n-    @apiParam {String} sessionToken 登录授权.\n-    @apiParam {String} sex 性别: 1为男,0为女\n-    @apiParam {String} nickname 用户昵称\n-    @apiParam {file} headimgurl 头像\n-    @apiParam {String} location 地区\n-    @apiParam {String} birthday 生日\n-   */\n-  app.post '/Api/user/modify',(req,res)->\n-    {sessionToken} = req.body\n-\n-    query = new AV.Query AV.User\n-\n-    query.equalTo \"sessionToken\", sessionToken\n-\n-    query.first {\n-      success:(user)->\n-        _user = user\n-        debug \"_user : #{JSON.stringify _user.attributes}\"\n-        userInfo = req.body\n-        debug \"userInfo : #{JSON.stringify userInfo,'','\\t'}\"\n-        #昵称\n-        if userInfo.nickname\n-          _user.set 'nickname',userInfo.nickname\n-\n-        #性别\n-        if userInfo.sex\n-          sex = if userInfo.sex === \"0\"\n-                then 0\n-                else 1\n-          _user.set 'sex',sex\n-\n-        #地区\n-        if userInfo.location\n-          _user.set 'location',userInfo.location\n-\n-        #生日\n-        if userInfo.birthday\n-          _user.set 'birthday',userInfo.birthday\n-\n-        sessionToken = userInfo.sessionToken;\n-        debug \"sesstionToken : #{sessionToken}\"\n-\n-\n-        if req.files && !isEmpty(req.files)\n-          saveFileWithUrl req.files,req.body .then (data)->\n-            debug \"data : #{JSON.stringify data}\"\n-\n-            headimgurl = \"http://ac-brknqdxv.clouddn.com/2621a17ac8e9368a.png?imageView/2/w/200/h/200\"\n-            headimgurl = data.headimgurl if data.headimgurl\n-            _user.set 'headimgurl',headimgurl\n-            debug \"user : #{JSON.stringify _user}\"\n-\n-\n-            if _user.dirty!\n-              debug \"更新\"\n-              _user.save!\n-\n-            attributes = _user.attributes\n-            attributes.sessionToken = sessionToken\n-            res.json status:true,results:attributes\n-        else\n-         _user.save!\n-              .then (data)->\n-                sessionToken = userInfo.sessionToken;\n-                debug \"sesstionToken : #{sessionToken}\"\n-\n-                attributes = _user.attributes\n-                attributes.sessionToken = sessionToken\n-                res.json status:true,results:attributes\n-              ,(err)->\n-                res.json status:false,results:&0\n-\n-      error: (obj,err)->\n-        res.json status:false,results:&0.responseText\n-    }\n-\n-\n-\n-\n-  /**\n-    @api {post} /Api/user/smsVerify 发送用户验证码\n-    @apiVersion 0.1.0\n-    @apiName smsVerify\n-    @apiGroup User\n-    @apiDescription 向手机发送短信验证码\n-    @apiParam {String} mobile 手机号码\n-   */\n-  app.post '/Api/user/smsVerify',(req,res)->\n-    {mobile} = req.body\n-    debug \"mobile:#{mobile}\"\n-    joi.validateMobilePhone mobile,res,(err,res)->\n-      sendVerify mobile\n-        .then ->\n-          res.json status:true,results:{mobile}\n-      ,->\n-          res.json status:false,results:&0.responseText\n-\n-\n-\n-  /**\n-    @api {post} /Api/user/login 用户登录\n-    @apiVersion 0.1.0\n-    @apiName userlogin\n-    @apiGroup User\n-    @apiDescription 用户登录\n-    @apiParam {String} mobile 手机号码\n-    @apiParam {String} password 登录密码\n-   */\n-  app.post '/Api/user/login',(req,res)->\n-    {mobile,password} = req.body\n-    loginInfo = {username:mobile,password:password}\n-    send \"login\",loginInfo,\"GET\",->\n-      res.json status:true,results:&0\n-    ,(err)->\n-        res.json status:false,results:err.responseText\n-\n-\n-\n-  /**\n-    @api {post} /Api/user/reg 用户注册\n-    @apiVersion 0.1.0\n-    @apiName userRegister\n-    @apiGroup User\n-    @apiDescription 用户注册\n-    @apiParam {String} mobile 手机号码\n-    @apiParam {String} verifycode 手机短信验证码\n-    @apiParam {String} isDebug 是否调试\n-    @apiParam {String} password 登录密码\n-   */\n-  app.post '/Api/user/reg',(req,res)->\n-    {mobile,nickname,verifycode,password,isDebug,sex,headimgurl} = req.body\n-    userInfo = {mobile,verifycode,password,isDebug,nickname,sex,headimgurl}\n-    debug \"req.body : #{JSON.stringify req.body}\"\n-\n-    saveFileWithUrl req.files,req.body .then (data)->\n-      data.sex = if data.sex === \"1\"\n-                 then 1\n-                 else 0\n-      userCreate data\n-        .then ->\n-            res.json status:true,results:&0\n-        ,->\n-            res.json status:false,results:&0.responseText\n-    ,->\n-      res.json status:false,results:&0\n-\n-\n-\n-\n-  /**\n-    @api {get} /Api/user/profile profile for  User\n-    @apiVersion 0.1.0\n-    @apiName profile\n-    @apiGroup User\n-    @apiPermission login\n-    @apiDescription 获取当前用户信息\n-    @apiExample {curl} Example usage:\n-    curl -i http://dev.knowhere.avosapps.com/Api/user/profile\n-    @apiUse errorNotLogin\n-    @apiUse successUser\n-   */\n-  app.get '/Api/user/profile', (req, res)->\n-    console.log \"profile\",AV.User.current()\n-    user = AV.User.current()\n-    if user\n-      user.fetch success:(user)->\n-        res.json status:true,results:user._serverData\n-      error:(error)->\n-        res.json status:false,results:error\n-    else\n-      res.json status:false,results:message:\"not login yet\"\n+{saveFileWithUrl,saveFileWithData,send,saveFile,removeFile} = require \"cloud/lib/datarequest\"{authorMap,userFilter,exhibitionInclude,commentFilter,exhibitionListInclude,ibeaconFilter,galleryInclude,exhibitionSampleKeys,itemInclude,itemsKeys,exhibitionFilter,galleryFilter,galleryRecommandFilter,itemFilter,exRecommandFilter,cityFilter} = require 'cloud/lib/static'{union,isEmpty} = require \"lodash\"require! \\utilrequire! \\momentrequire! 'querystring'require! \\cloud/lib/joirequire! \\cryptorequire! \\cloud/lib/easemobrequire! 'moment'require! 'moment-timezone' sdk = require \"umeng-node-sdk\"debug = require(\\debug)(\\meili:routeIndex)#加载帐号服务{getUserFollow,getUserFavoriteByUserId,removeUserCommentBySessionToken,getUserInfo,getUserFans,checkUserFavorite,sendVerify,userCreate,checkSessionToken,getUserFavorite,addUserFavorite,removeUserFavorite,resetPassword,forgetPassword}=require \\cloud/services/accountServices#展览服务{exhibition} = require \\cloud/services/exhibitionServices#评论服务{commentsGood,commentsGetter,UserComment,UserCommentGetter} = require \\cloud/services/commentsServices# 友盟 iOSuMengAppKey=\"553f262367e58e44ec00275c\"uMengAppSecret=\"itleuty2d7romfxy3esqxmq1uqwua81t\"# 友盟 安卓uMengAndroidAppKey = \"5550954fe0f55a07580006e7\"uMengAndroidMasterKey = \"itwsq3ibgybpnukrinitnqpjmhsybnie\"#hash = crypto.createHash \\md5#hash.update  \"asdfasdf\"#debug \"``````\",hash.digest \\hex#sortMap =  #\\名称 : \\nameBase \\浏览次数 : \\viewCount \\收藏次数 : \\favoriteCount \\创建时间 : \\createdAt  #\\-名称 : \\-nameBase \\-浏览次数 : \\-viewCount \\-收藏次数 : \\-favoriteCount \\-创建时间 : \\-createdAt  #[\"名称\",\"浏览次数\",\"收藏次数\",\"创建时间\"]/**   @apiDefine systemStatic  *   @apiSuccess {Boolean} status 操作是否成功   @apiSuccess {String}  results 系统常量字典   @apiSuccess {String}  results.login 小刀会登陆开放状态:yea:开放;no:关闭  *   @apiSuccessExample {json} Success-Response::  *HTTP/1.1 200   {      \"status\":true,      \"results\":{          \"login\":\"no\"       }   }  *//**  @apiDefine errorNotLogin  @apiError errorNotLogin 未登录  @apiErrorExample Error-Response:      HTTP/1.1 200 Not Found      {        status:false        {          \"message\": \"not login yet\"        }      } *//**  @apiDefine error203 *  @apiError error203 此电子邮箱已经被占用 *  @apiErrorExample Error-Response: *     HTTP/1.1 200 Not Found *     { *       status:false *       { *         \"code\":203, *         \"error\": \"此电子邮箱已经被占用。\" *       } *     } *//**  @apiDefine successGalleryRecommand *  @apiSuccess {Boolean} status 操作是否成功.  @apiSuccess {Object}  results 展馆信息.  @apiSuccess {Array}   results.contentPicArr   详细图  @apiSuccess {Number}   results.exCount   展馆的展览数量  @apiSuccess {Object}    results.coverUrl    封面  @apiSuccess {Array}   results.nameBase   展馆名  @apiSuccess {Object}    results.address    地址  @apiSuccess {Number}    results.endTime    结束时间（秒）  @apiSuccess {Number}    results.beginTime    开始时间（秒）  @apiSuccess {Number}    results.entrancePrice    门票价格  @apiSuccess {Number}     results.recommended       是否推荐  @apiSuccess {String}     results.objectId          展馆id  @apiSuccess {String}     results.information        详细信息  @apiSuccess {String}     results.priceAddInfo        价格附加信息  @apiSuccess {String}     results.timeAddInfo        时间附加信息 * *  @apiSuccessExample {json} Success-Response::  *HTTP/1.1 200 {    \"status\": true,    \"results\": [        {             \"contentPicArr\": [                {                    \"name\": \"00445004DD93D757.jpg\",                    \"url\": \"http://ac-lolnfdt5.clouddn.com/07a476c13c98c1cc\"                }            ],            \"coverUrl\": {                \"name\": \"展馆3.jpg\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/2296d75ee46a14ff.jpg\"            },            \"address\": {                \"citycode\": \"010\",                \"address\": \"东长安街16号\",                \"detailsAddress\": \"北京市北京市东城区东长安街16号中国国家博物馆\",                \"name\": \"中国国家博物馆\",                \"cityname\": \"北京市\",                \"adname\": \"东城区\",                \"pcode\": \"110000\",                \"pname\": \"北京市\",                \"adcode\": \"110101\"            },            \"objectId\": \"54c1bc6ee4b09521168c5622\",            \"endTime\": 61200,            \"priceAddInfo\": \"提供短信、网络、团体预约服务。凭有效证件免费领票。部分展览收费。\",            \"timeAddInfo\": \"15:30止票，16:00停止入馆。周一闭馆\",            \"entrancePrice\": 0,            \"nameBase\": \"中国国家博物馆\",            \"information\": \"中国国家博物馆（National Museum of China）简称国博，位于北京市中心天安门广场东侧，东长安街南侧，与人民大会堂东西相对称，是历史与艺术并重，集收藏、展览、研究、考古、公共教育、文化交流于一体的综合性博物馆。隶属于中华人民共和国文化部。\\r\\n截止至2013年末，中国国家博物馆总建筑面积近20万平方米，国博藏品数量为100余万件，展厅数量48个。是世界上单体建筑面积最大的博物馆，是中华文物收藏量最丰富的博物馆之一，整体规模在世界博物馆中位居前列，2012年游客接待量达到537万人次，2013年达到745万人次（当年全球第三 ），是全世界最受游客欢迎的博物馆之一。\",            \"recommended\": 1,            \"beginTime\": 32400,            \"largePicUrl\": {                \"name\": \"展馆3.jpg\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/e43ae5c062523ad9.jpg\"            },            \"exCount\": 4        },        {            \"coverUrl\": {                \"name\": \"展馆1.jpg\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/1c1e256a539f92b0\"            },            \"address\": {                \"citycode\": \"010\",                \"address\": \"花家地南街8号\",                \"detailsAddress\": \"北京市北京市朝阳区花家地南街8号中央美术学院南区(东门)\",                \"name\": \"中央美术学院南区(东门)\",                \"cityname\": \"北京市\",                \"adname\": \"朝阳区\",                \"pcode\": \"110000\",                \"pname\": \"北京市\",                \"adcode\": \"110105\"            },            \"objectId\": \"54cf07eae4b0fe752dd814d5\",            \"endTime\": 61200,            \"priceAddInfo\": \"暂无\",            \"timeAddInfo\": \"暂无\",            \"entrancePrice\": 0,            \"nameBase\": \"中央美术学院美术馆\",            \"information\": \"新美术馆于2008年3月竣工，位于中央美院校园内，是中国最具现代化标准的美术展览馆之一。美术馆建筑呈微微扭转的三维曲面体，天然岩板幕墙，配以最现代性的类雕塑建筑，展现中央美术学院内敛低调的特质，同时也与校园内吴良镛先生设计的深灰色彩院落式布局的建筑物充分融合及协调。美术馆总面积为14777平方米，地上四层，地下二层，局部地下一层。展览及陈列面积共4150平方米，其中二层为固定陈列展，展示古代书画和美院资深教授的赠画藏品，以及当今美院在籍教授的作品；企划展厅设置在三层及四层，均为天光围幕的敞开式现代化展厅。三层11米高的展厅可为当代艺术展览提供充分的展示空间。美术馆藏品库房位于地下二层，1120平方米，采用国际最新信息技术和数字化管理，在软硬件方面均可达到国际水准。公共服务设施主要位于一层，其中报告厅可容纳380人，为学术研讨、专题讲座及新闻发布会等提供了便利场所。其他公共服务设施还有服务台、咖啡厅、书店等。\",            \"recommended\": 1,            \"beginTime\": 32400,            \"largePicUrl\": {                \"name\": \"展馆3.jpg\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/25dfde7da253a3e4\"            },            \"exCount\": 3        }    ]} *//**  @apiDefine successExhibition * *  @apiSuccess {Boolean} status 操作是否成功.  @apiSuccess {Object}  results 展览信息.  @apiSuccess {Array}   results.contentPicArr   详细图  @apiSuccess {String}   results.nameBase   展览名  @apiSuccess {String}   results.subName   展览副标题  @apiSuccess {Array}   results.items   所有展览的展品  @apiSuccess {String}   results.information   展览的详细  @apiSuccess {String}   results.panoramic   展览的全景环绕  @apiSuccess {Number}   results.entrancePrice   展览的门票  @apiSuccess {Object}    results.coverUrl    封面  @apiSuccess {Object}    results.recommended    精品推荐  @apiSuccess {Object}    results.recommendLoc    本地推荐  @apiSuccess {Object}    results.priceAddInfo    价格附加信息  @apiSuccess {Object}    results.timeAddInfo    时间附加信息  @apiSuccess {Object}    results.endTime    结束时间（iso）  @apiSuccess {Object}    results.beginTime    开始时间（iso）  @apiSuccess {String}     results.objectId          展览id * *  @apiSuccessExample {json} Success-Response:: *HTTP/1.1 200{    \"status\": true,    \"results\": {        \"contentPicArr\": [            {                \"name\": \"NF013.jpg\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/e81aa8175583aa80\"            }        ],        \"coverUrl\": {            \"name\": \"NF021.jpg\",            \"url\": \"http://ac-lolnfdt5.clouddn.com/38c1778bde0919c4\"        },        \"objectId\": \"54b3a51de4b06e8b5a7fae79\",        \"endTime\": {            \"iso\": \"2015-01-09T12:59:00.000Z\",            \"__type\": \"Date\"        },        \"priceAddInfo\": \"美元\",        \"timeAddInfo\": \"123dTime123123\",        \"entrancePrice\": 57,        \"nameBase\": \"罗丹12\",        \"gallery\": {            \"address\": {                \"citycode\": \"010\",                \"address\": \"东长安街16号\",                \"detailsAddress\": \"北京市北京市东城区东长安街16号中国国家博物馆\",                \"name\": \"中国国家博物馆\",                \"cityname\": \"北京市\",                \"adname\": \"东城区\",                \"pcode\": \"110000\",                \"pname\": \"北京市\",                \"adcode\": \"110101\"            },            \"objectId\": \"54b377f0e4b06e8b5a7cd4ca\",            \"nameBase\": \"国家博物馆\"        },        \"information\": \"罗丹123123哈哈哈哈\",        \"timeType\": 0,        \"recommended\": 0,        \"items\": [            {                \"contentPicArr\": [                ],                \"coverUrl\": {                    \"name\": \"20111018184945804.jpg\",                    \"url\": \"http://ac-lolnfdt5.clouddn.com/faf534d98160b734\"                },                \"creator\": \"我\",                \"objectId\": \"54cf3ea8e4b0fe752ddce138\",                \"nameBase\": \"展品展品\",                \"information\": \"无\",                \"recommended\": 0,                \"largePicUrl\": {                    \"name\": \"20111018184945804.jpg\",                    \"url\": \"http://ac-lolnfdt5.clouddn.com/faf534d98160b734\"                }            }        ],        \"beginTime\": {            \"iso\": \"2015-01-08T01:00:00.000Z\",            \"__type\": \"Date\"        },        \"largePicUrl\": {            \"name\": \"NF043.jpg\",            \"url\": \"http://ac-lolnfdt5.clouddn.com/ce6cd181493646d2\"        }    }} *//**   @apiDefine successLancher  *   @apiSuccess {String} results.lancherUrl 启动图片地址  *  *   @apiSuccessExample {json} Success-Response::  *HTTP/1.1 200  {     \"status\": true,     \"results\": {\"lancherUrl\":\"http://ac-lolnfdt5.clouddn.com/2296d75ee46a14ff.jpg\"}  }*//**  @apiDefine successExs *  @apiSuccess {Boolean} status 操作是否成功.  @apiSuccess {Array}  results 展览信息.  @apiSuccess {String}   results.nameBase   展览名  @apiSuccess {String}   results.subName   展览副标题  @apiSuccess {Object}   results.gallery   展览所在展馆  @apiSuccess {Object}    results.coverUrl    封面  @apiSuccess {Object}    results.videoUrl    视频地址  @apiSuccess {String}     results.objectId          展览id  @apiSuccess {String} count  数据总记录条数 *  @apiSuccessExample {json} Success-Response:: *HTTP/1.1 200     {    \"status\": true,    \"results\": [        {            \"coverUrl\": {                \"name\": \"屏幕快照 2015-01-20 下午7.46.12.png\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/fabd8e61349b4f26\"            },            \"objectId\": \"54c1c705e4b09521168cd615\",            \"subName\": \"——罗丹雕塑艺术回顾展\",            \"nameBase\": \" 永远的思想者\",            \"gallery\": {                \"objectId\": \"54c1bc6ee4b09521168c5622\",                \"nameBase\": \"中国国家博物馆\"            }        },        {            \"coverUrl\": {                \"name\": \"IMG_1111.JPG\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/47a3e061b0fa5eff\"            },            \"objectId\": \"54d85daae4b0a1c73820159e\",            \"subName\": \"长期陈列\",            \"nameBase\": \"国博馆藏现代经典美术作品\",            \"gallery\": {                \"objectId\": \"54c1bc6ee4b09521168c5622\",                \"nameBase\": \"中国国家博物馆\"            }        },        {            \"coverUrl\": {                \"name\": \"084538xgrzlue41url4lg4.jpg\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/50ddacfafa5d6606\"            },            \"objectId\": \"54d99fe2e4b037f99ee417a0\",            \"subName\": \"--专题陈列\",            \"nameBase\": \"中国古代佛造像艺术展\",            \"gallery\": {                \"objectId\": \"54c1bc6ee4b09521168c5622\",                \"nameBase\": \"中国国家博物馆\"            }        },        {            \"coverUrl\": {                \"name\": \"IMG_1118.JPG\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/4daac01697653fb1\"            },            \"objectId\": \"54d96c8be4b037f99ee02982\",            \"subName\": \"--中国明清家具珍品\",            \"nameBase\": \"大美木艺\",            \"gallery\": {                \"objectId\": \"54c1bc6ee4b09521168c5622\",                \"nameBase\": \"中国国家博物馆\"            }        },        {            \"coverUrl\": {                \"name\": \"d7eb42a49bb90b58a10d56852cb35d5d.jpeg\",                \"url\": \"http://ac-lolnfdt5.clouddn.com/e194e7164043ad9d.jpeg\"            },            \"objectId\": \"55068c07e4b0c9cd54e25a56\",            \"subName\": \"测试\",            \"nameBase\": \"齐白石画展\",            \"gallery\": {                \"objectId\": \"54cf07eae4b0fe752dd814d5\",                \"nameBase\": \"中央美术学院美术馆\"            }        }    ]}*//**  @apiDefine successItem * *  @apiSuccess {Boolean} status 操作是否成功.  @apiSuccess {Object}  results 展览信息.  @apiSuccess {Array}   results.contentPicArr   详细图  @apiSuccess {Array}   results.nameBase   展品名  @apiSuccess {Array}   results.items   所有展览的展品  @apiSuccess {Object}    results.coverUrl    封面  @apiSuccess {Object}    results.creator    作者  @apiSuccess {Object}    results.videoUrl    视频地址  @apiSuccess {Object}    results.information    作者  @apiSuccess {Object}    results.largePicUrl    大图  @apiSuccess {String}    results.creationTime    创作时间  @apiSuccess {String}     results.objectId          展品id * *  @apiSuccessExample {json} Success-Response:: *HTTP/1.1 200{  \"status\": true,  \"results\": [    {      \"creationTime\": \"时间23\",      \"contentPicArr\": [],      \"coverUrl\": {        \"name\": \"NM108.jpg\",        \"url\": \"http://ac-lolnfdt5.clouddn.com/20350bc1e06c1c85\"      },      \"creator\": \"罗丹\",      \"objectId\": \"54b478dfe4b06e8b5a87c645\",      \"nameBase\": \"雕塑1\",      \"information\": \"罗丹雕塑吊炸天\",      \"recommended\": 0,      \"largePicUrl\": {        \"name\": \"NM090.jpg\",        \"url\": \"http://ac-lolnfdt5.clouddn.com/f62499727b27658f\"      }    }  ]} *//**  @apiDefine successCity *  @apiSuccess {Boolean} status 操作是否成功.  @apiSuccess {Object}  results 展览信息.  @apiSuccess {Array}   results.citys   可用城市 *  @apiSuccessExample {json} Success-Response:: *HTTP/1.1 200{  \"status\": true,  \"results\": {    \"updatedAt\": \"2015-01-23T03:51:31.087Z\",    \"ukey\": \"city\",    \"createdAt\": \"2015-01-23T03:51:12.291Z\",    \"citys\": [      \"北京市\",      \"厦门市\"    ],    \"objectId\": \"54c1c530e4b088dfb16721eb\"  }}*//**  @apiDefine successUser *  @apiSuccess {Boolean} status 操作是否成功.  @apiSuccess {Object}  results 用户信息.  @apiSuccess {String} results.easemobPwd 环信密码.  @apiSuccess {String} results.easemob 环信UUID. *  @apiSuccessExample {json} Success-Response:: *HTTP/1.1 200  {      \"status\": true,      \"results\": {          \"authData\": {              \"weixin\": {                  \"openid\": \"o2DqTtwt_9thVO0aaZVeZJOTuX6w\",                  \"access_token\": \"123\",                  \"expires_in\": 123              }          },          \"sex\": 1,          \"ACL\": {              \"*\": {                  \"write\": true,                  \"read\": true              }          },          \"nickname\": \"彳亍\",          \"city\": \"Liaocheng\",          \"username\": \"sza2mfqt3fli1i9u3pt5va2o1\",          \"headimgurl\": \"http://wx.qlogo.cn/mmopen/Q3auHgzwzM5LS8V8oH46GEq93iaGLWVMDGUiaArrFDAD0jiayH2nQ0LmwkVt9QjnZL8n4XY9icItj1YqwJQ2ThZciag/0\",          \"emailVerified\": false,          \"language\": \"zh_CN\",          \"country\": \"CN\",          \"mobilePhoneVerified\": false,          \"easemob\": \"386a7e1a-12b2-11e5-add7-834367b38acc\",          \"easemobPwd\": \"1fc28a82e584e7d84a3f2c1d8f419fae\"      }  }*//** * @apiDefine login after login User access only * after login User access only */module.exports = (app)->  /**  * @api {get} /Api/static  系统静态变量  * @apiVersion 0.1.0  * @apiParam {String}[platform=ios] platform 指定平台, ios平台需要指定.  * @apiName static  * @apiGroup system  * @apiDescription 移动端系统  *  * @apiExample Example usage:  * curl -X GET http://dev.knowhere.avosapps.com/Api/static  *  * @apiUse systemStatic  */  app.get '/Api/static',(req,res)->    {platform,version} = req.query    if platform === \"ios\" and version===\"1.2.7\" then      result = {\"login\":\"no\"}    else      result = {\"login\":\"yes\"}    res.json status:true,result:result  /**   * @api {get} /Api/gallery/recommend  画廊推荐   * @apiVersion 0.1.0   * @apiName galleryRecommend   * @apiGroup Gallery   * @apiDescription 画廊推荐   *   * @apiParam {String}[limit=100] limit 取多少个.   * @apiParam {String}[skip=0] skip 跳过多少个.   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).   * @apiParam {String=en}[lang] 语言   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/gallery/recommend?limit=10&skip=10   *   * @apiUse successGalleryRecommand   */  app.get '/Api/gallery/recommend',(req,res)->    {limit,skip,city,lang,sessionToken} = req.query    data ={}    data.include=galleryInclude    data.limit = limit if limit    data.skip = skip if skip    data.where = {recommended:{$gt:0},deleted:$ne:1}    data.where.'address.cityname' = city if city&&city!=\"全部\"    data.order = \"-recommended\"    data.order = '-recommended,-recommendLoc'  if city&&city!=\"全部\"    send \"classes/Gallery\",data,\"GET\",->      galleryResult = &0.results      galleryResult.forEach (item)->        /*length = item*/        debug \"exhibitionAll 's length : #{JSON.stringify item,'','\\t'}\"        item.exCount = item.exhibitionAll?.length || 0        item.createdAt = (new Date item.createdAt).getTime!        item      galleryResult = galleryRecommandFilter galleryResult,lang      #合并收藏数据      checkUserFavorite sessionToken,\"UserFavoriteGallery\",galleryResult,(galleryData)->       res.json status:true,results:galleryData    ,->      res.json status:false,results:&0.responseText  /**   * @api {get} /Api/defaultLancher  取得应用启动图   * @apiVersion 0.1.0   * @apiName defaultLandher   * @apiGroup system   * @apiDescription 系统接口，取得应用启动图   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/defaultLancher   *   * @apiUse successLancher   */   app.get '/Api/defaultLancher', (req, res)->    send \"classes/Lancher\",{order:\"-default\",limit:1},\"GET\",(lancher)->      lancherUrl = if lancher.results.length> 0                   then  lancher.results[0].lancherUrl.url                   else \"\"      res.json status:true,results:{lancherUrl:lancherUrl}    ,(err)->      res.json status:false,results:&0.responseText  /**   * @api {get} /Api/gallery/list  画廊列表   * @apiVersion 0.1.0   * @apiName galleryList   * @apiGroup Gallery   * @apiDescription 画廊列表   *   * @apiParam {String}[limit=100] limit 取多少个.   * @apiParam {String}[skip=0] skip 跳过多少个.   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).   * @apiParam {String=en}[lang] 语言   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/gallery/list?limit=10&skip=10   *   * @apiUse successGalleryRecommand   */  app.get '/Api/gallery/list',(req,res)->    {limit,skip,city,lang} = req.query    data ={}    data.include=galleryInclude    data.limit = limit if limit    data.skip = skip if skip    data.where = {deleted:$ne:1}    data.where.'address.cityname' = city if city&&city!=\"全部\"    data.order = \"-recommended\"    data.order = '-recommended,-recommendLoc'  if city&&city!=\"全部\"    send \"classes/Gallery\",data,\"GET\",->      &0.results.forEach (item)->        item.exCount = item.exhibitionAll?.length || 0        item.createdAt = (new Date item.createdAt).getTime!      res.json status:true,results: galleryRecommandFilter &0.results,lang    ,->      res.json status:false,results:&0.responseText  /**   * @api {get} /Api/exhibition/recommend  展览推荐   * @apiVersion 0.1.0   * @apiName exhibitionRecommend   * @apiGroup Exhibition   * @apiDescription 展览推荐   *   * @apiParam {String}[limit=100] limit 取多少个.   * @apiParam {String}[skip=0] skip 跳过多少个.   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).   * @apiParam {String=en}[lang] 语言   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/recommend?limit=10&skip=10   *   * @apiUse successExs   */     app.get '/Api/exhibition/recommend',(req,res)->    {limit,skip,city,lang,sessionToken} = req.query    data ={}    data.include=exhibitionListInclude    data.limit = limit if limit    data.skip = skip if skip    data.where = {deleted:$ne:1}    if city&&city!=\"全部\"      data.where.'$or' = [{recommended:{$gt:0}},{recommendLoc:{$gt:0}}]      data.where['gallery'] = $inQuery:        className:\"Gallery\"        where:          'address.cityname':city      data.order = '-recommended,-recommendLoc'    else      data.where.recommended = {$gt:0}      data.order = \"-recommended\"    data.count = 1    tempT =  Math.round new Date!.getTime! /1000    debug \"startSend\",tempT    send \"classes/Exhibition\",data,\"GET\",->      exhibitionData = exRecommandFilter &0.results,lang      exhibitionData = exhibitionData.map (item)->                        item.end = 0 # 常展为 1                        item.createdAt = (new Date item.createdAt).getTime!                        if item.timeType === 0 then                          beginTime = (new Date item.beginTime.iso).getTime! / 1000                          endTime = (new Date item.endTime.iso).getTime! / 1000 + ((23*60 + 59) * 60)                          if beginTime >= tempT                            item.end = 0                          else                            item.end = if beginTime <= tempT and endTime <= tempT                                       then 1                                       else 0                        delete item.beginTime                        delete item.endTime                        item      count = &0.count      checkUserFavorite sessionToken,\"UserFavoriteExhibition\",exhibitionData,(data)->        res.json status:true,results:data,count:count    ,->      res.json status:false,results:&0.responseText  /**  * @api {GET}/Api/exihbition/:eid/comment 查看指展览的评论  * @apiVersion 0.1.0  * @apiName commentsGetter  * @apiGroup Exhibition  * @apiDescription 查看指展览的评论  *  * @apiParam {String}[limit=100] limit 取多少个.  * @apiParam {String}[skip=0] skip 跳过多少个.  * @apiParam {String}[sessionToken] sessionToken 用户授权码  *  * @apiExample Example usage:  * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/xxxx/comment?limit=10&skip=10  */  app.get '/Api/exhibition/:eid/comment',(req,res)->    {limit,skip,sessionToken}=req.query    eid = req.params.eid    commentsGetter eid,limit,skip,sessionToken      .then ->        res.json status:true,results:&0,count:&1      ->        res.json status:false,results:&0  /**   * @api {POST}/Api/comment/:cid/good 给指定评论打赞   * @apiVersion 0.1.0   * @apiName commentsGetter   * @apiGroup Exhibition   * @apiDescription 评论点赞   * @apiParam cid 评论ID   * @apiParam {String}[sessionToken] 用户登录授权   * @apiParam {String}[op] 操作代码 1:为收藏 0:取消收藏  */  app.post '/Api/comment/:cid/good',(req,res)->    {op,sessionToken} = req.body    cid = req.params.cid    commentsGood sessionToken,cid,op      .then ->res.json status:true,results:&0      ,-> res.json status:false,results:&0  #查看指定的展品评论  app.get '/Api/item/:itemId/comment',(req,res)->    {limit,skip,sessionToken}=req.query    itemId = req.params.itemId    commentsGetter itemId,limit,skip,sessionToken      .then ->        res.json status:true,results:&0,count:&1      ->        res.json status:false,results:&0  /**    * @api {POST}/Api/item/:itemId/comment 发布指定展品评论    * @apiVersion 0.1.0    * @apiName ItemComment    * @apiGroup ExhibitionItem    * @apiDescription 发布指定展品评论    *    * @apiParam {String}[sessionToken] 用户登录授权    * @apiParam {String}[content] 评论内容    */  app.post '/Api/item/:itemId/comment',(req,res)->   {content,sessionToken} = req.body   itemId = req.params.itemId   joi.validateID itemId,res,->     checkSessionToken sessionToken      .try (user)->        #查找展品        _p = new AV.Promise!        send \"classes/Item/#{itemId}\",{include:\"exhibition,contentPicArr,coverUrl,gallery\"},\"GET\",->          itemInfo = &0;          debug \"get Item Info #{JSON.stringify itemInfo}\"          if itemInfo !== {}            exhibition = exRecommandFilter itemInfo.exhibition,undefined            delete exhibition.items            itemInfo.exhibition = exhibition            debug \"exhibition Id : #{itemId} info:#{JSON.stringify exhibition,'','\\t'}\"            _p.resolve itemInfo,user          else            _p.reject {} #找不到展品        ,->          #查看展品失败          p.reject {}        _p      .try (itemInfo,user)->        comment = {}        comment.userId = user        comment.parentId = itemId        itemInfo.type = \"items\"        comment.parentInfo = itemInfo        comment.content = content        send \"classes/Comment\",comment,\"POST\",->          res.json status:true,results:&0        ,->          res.json status:false,results:&0.responseText      .catch ->        res.json status:false,results:\"登录失败\"  /**    * @api {POST}/Api/exihbition/:eid/comment 发布指定展览评论    * @apiVersion 0.1.0    * @apiName commentsGetter    * @apiGroup Exhibition    * @apiDescription 发布指定展览评论    *    * @apiParam {String}[sessionToken] 用户登录授权    * @apiParam {String}[content] 评论内容    */  app.post '/Api/exhibition/:eid/comment',(req,res)->   {content,sessionToken} = req.body   eid = req.params.eid   joi.validateID eid,res,->     checkSessionToken sessionToken      .try (user)->        _p = new AV.Promise!        send \"classes/Exhibition/#{eid}\",{include:\"gallery\"},\"GET\",->          exhibition = exRecommandFilter &0,undefined          delete exhibition.items          debug \"exhibition Id : #{eid} info:#{JSON.stringify exhibition,'','\\t'}\"          _p.resolve user,exhibition        ,->          _p.reject \"找不到展览\"        _p      .try (user,exhibitionInfo)->        comment = {}        comment.userId = user        comment.parentId = eid        exhibitionInfo.type = \"exhibition\"        comment.parentInfo = exhibitionInfo        comment.content = content        send \"classes/Comment\",comment,\"POST\",->          res.json status:true,results:&0        ,->          res.json status:false,results:&0.responseText      .catch ->        res.json { status:false,results:\"登录失败\"}  /**  * @api {GET} /Api/ibeacon  云子iBeacon推送  * @apiVersion 0.1.0  * @apiName IbeaconNoticatifer  * @apiGroup Noticatifer  * @apiDescription 云子iBeacon设备,发送请求后服务向设备发送推送  *  * @apiParam {String}[limit=100] limit 取多少个.  * @apiParam {String}[skip=0] skip 跳过多少个.  * @apiParam {String}[city=全部] city所在城市(高德地图城市名).  * @apiParam {String=en}[lang] 语言  *  * @apiExample Example usage:  * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/recommend?limit=10&skip=10  *  * @apiUse successExs  */  app.get '/Api/ibeacon',(req,res)!->    {device_sn,device_tokens,isProductionModel,platform} = req.query    whereObj = {}    data = {}    whereObj.[\"device_sn\"] = device_sn    data.where = whereObj    send \"classes/Item\",data,\"GET\",!->      if &0.results.length >= 1 then        item = &0.results[0]        send \"classes/Exhibition/#{item.exhibition.objectId}\",{},\"GET\",->          exhibition = &0          debug \"from exhibition : #{JSON.stringify exhibition}\"          timeStamp = new Date!          info = {}          isProductionModel = isProductionModel == \"\" ? \"false\" : \"true\"          if platform === \"ios\"            info = {              timestamp : timeStamp.getTime!              device_tokens : device_tokens              payload : {                aps:{alert: item.nameBase,sound:\"default\"}                display_type: 'notification'              }              jumpOther:\"item\"              objectID:item.objectID              exhibition_id:exhibition.objectID              exhibition_Name:exhibition.nameBase            }            console.log \"publish info : #{JSON.stringify info}\"            Noticatifer = new sdk({platform: 'ios',appKey: uMengAppKey, appMasterSecret: uMengAppSecret,productionMode: isProductionModel });          else            info = {              timestamp : timeStamp.getTime!              device_tokens : device_tokens              payload : {                body:{                  ticker: item.nameBase                  title:\"知亦行\"                  text:item.nameBase                  after_open: 'go_app'                }                extra:{                  jumpOther:\"item\"                  objectID:item.objectID                  exhibition_id:exhibition.objectID                  exhibition_Name:exhibition.nameBase                }              }              display_type:\"notification\"            }            debug \"publish info : #{JSON.stringify info}\"            Noticatifer = new sdk({platform: 'android',appKey: uMengAndroidAppKey, appMasterSecret: uMengAndroidMasterKey,productionMode: isProductionModel });          Noticatifer.unicast info,(err,httpResponse,result)!->            if err               console.log \"push Err :\"+JSON.stringify(err)               res.json { status:false,results:err}            else               console.log \"push result :\"+JSON.stringify(result)               res.json { status:true,results:\"success\"}      else         res.json { status:false,results:\"not found device_sn\"}    ,->      res.json status:false,results:&0.responseText  /**   * @api {GET} /Api/ibeacon/desc 返回云子设备列表   * @apiVersion 0.1.0   * @apiName IbeaconDesc   * @apiGroup Noticatifer   * @apiDescription 输出云子设备所包含的所有及信息   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/ibeacon/desc   *  */  app.get '/Api/ibeacon/desc',(req,res)->    data ={}    data.order = \"-sort\"    send \"classes/Ibeacon\",data,\"GET\",(result)->      res.json status:true,results:ibeaconFilter result.results,\"\"    ,(err)->      res.json status:false,results:err.responseText  /**   * @api {POST} /Api/ibeacon  通过发送多个 device_sn ，返回多个展品信息   * @apiVersion 0.1.0   * @apiName ibeaconNoticatifer   * @apiGroup Noticatifer   * @apiDescription 按device_sn查询所绑定的内容   *   * @apiParam {String} device_sn 云子ibeacon设备 device_sn，多个以‘|’分隔   *   * @apiExample Example usage:   * curl -X POST http://dev.knowhere.avosapps.com/Api/ibeacon   * curl -X POST http://dev.krakenjs.avosapps.com/Api/ibeacon   *  */  app.post '/Api/ibeacon',(req,res)->    {device_sn} = req.body    data = if (device_sn.indexOf '|') === -1           then [device_sn]           else device_sn.split '|'    condition = {}    condition.include = \"exhibition\"    condition.where={\"device_sn\":{\"$in\":data}}    send \"classes/Item\",condition,\"GET\",(items)!->      itemData = items.results.map (item)->        jumpOther:\"item\"        objectId:item.objectId        device_sn:item.device_sn        item_nameBase:item.nameBase        exhibition_objectId:item.exhibition.objectId        exhibition_nameBase:item.exhibition.nameBase      res.json status:true results:itemData    ,(err)!->      res.json status:false,results:&0.responseText  /**   * @api {get} /Api/exhibition/list  展览列表   * @apiVersion 0.1.0   * @apiName exhibitionList   * @apiGroup Exhibition   * @apiDescription 展览列表   *   * @apiParam {String}[limit=100] limit 取多少个.   * @apiParam {String}[skip=0] skip 跳过多少个.   * @apiParam {String}[city=全部] city所在城市(高德地图城市名).   * @apiParam {String=en}[lang] 语言   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/list?limit=10&skip=10   *   * @apiUse successExs   */  app.get '/Api/exhibition/list',(req,res)->    {limit,skip,city,lang,sessionToken} = req.query    data ={}    data.include=exhibitionListInclude    data.limit = limit if limit    data.skip = skip if skip    data.where = {deleted:$ne:1}    data.count = 1    if city&&city!=\"全部\"      data.where['gallery'] = $inQuery:        className:\"Gallery\"        where:          'address.cityname':city      data.order = '-recommended,-recommendLoc'    else      data.order = \"-recommended\"    tempT =  Date.now() / 1000    debug \"startSend\",tempT    send \"classes/Exhibition\",data,\"GET\",->      debug \"first : #{JSON.stringify &0.results[0],'','\\t'}\"      results = exRecommandFilter &0.results,lang      results = results.map (item)->                        item.end = 0 # 常展为 1                        item.createdAt = (new Date item.createdAt).getTime!                        if item.timeType === 0 then                          beginTime = (new Date item.beginTime.iso).getTime! / 1000                          endTime = (new Date item.endTime.iso).getTime! / 1000 + ((23*60 + 59) * 60)                          if beginTime >= tempT                            item.end = 0                          else                            item.end = if beginTime <= tempT and endTime <= tempT                                       then 1                                       else 0                        /*debug \"beginTime : #{beginTime}\"                        debug \"endTime : #{endTime}\"                        debug \"tempT : #{tempT}\"*/                        delete item.beginTime                        delete item.endTime                        item      #debug  \"beginTime\",Date.now() - tempT      #debug  \"endTime\",Date.now()-tempT      #results = exRecommandFilter &0.results,lang      count = &0.count      checkUserFavorite sessionToken,\"UserFavoriteExhibition\",results,(exhibitionResults)->        res.json status:true,results: exhibitionResults,count:count    ,->      res.json status:false,results:&0.responseText  /**   * @api {get} /Api/exhibition/:eid/favor  查看指展览的所有收藏用户   * @apiVersion 0.1.0   * @apiName exhibition favorite   * @apiGroup Gallery   * @apiDescription 所有收藏用户   *   * @apiParam {String}eid 展览id   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/54b3a51de4b06e8b5a7fae79/favorite   */  app.get '/Api/exhibition/:eid/favorite',(req,res)->    {limit,skip} = req.query    eid = req.params.eid    data ={}    data.order = \"-createdAt\"    data.include =\"userId\"    data.keys = \"userId\"    data.limit = limit if limit    data.skip = skip if skip    data.where = {\"favorite\":{\"__type\": \"Pointer\",\"className\": \"Exhibition\",\"objectId\": eid}}    data.count = 1    send \"classes/UserFavoriteExhibition\",data,\"GET\", ->      results = &0.results.map (item)-> item.userId      results = userFilter results,undefined      res.json status:true,results:results,count:&0.count    ,->      res.json status:false,results: &0.responseText  /**   * @api {get} /Api/exhibition/:eid  单个展览详细   * @apiVersion 0.1.0   * @apiName exhibition detail   * @apiGroup Gallery   * @apiDescription 画廊推荐   *   * @apiParam {String}eid 展览id   * @apiParam {String=en}[lang] 语言   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/54b3a51de4b06e8b5a7fae79?lang=en   *   * @apiUse successExhibition   */  app.get '/Api/exhibition/:eid',(req,res)->    {lang,sessionToken} = req.query    eid = req.params.eid    exhibition eid,sessionToken      .then -> res.json status:true,results: &0      ,(err)-> res.json status:false,results: err  /**   * @api {get} /Api/user/:user_id/fans  查看某个用户的粉丝   * @apiVersion 0.1.0   * @apiName user fans   * @apiGroup user   * @apiDescription 查看某个用户的粉丝   *   * @apiParam {String}user_id 用户ID   *   */  app.get '/Api/user/:user_id/fans',(req,res)->    user_id = req.params.user_id    getUserFans user_id      .then -> res.json status:true,results: &0      ,(err)-> res.json status:false,results: err  /**     * @api {get} /Api/user/:user_id/follow  查看某个用户的关注     * @apiVersion 0.1.0     * @apiName user follow     * @apiGroup user     * @apiDescription 查看某个用户的关注用户     *     * @apiParam {String}user_id 用户ID     *     */  app.get '/Api/user/:user_id/follow',(req,res)->    user_id = req.params.user_id    getUserFollow user_id      .then -> res.json status:true,results: &0      ,(err)-> res.json status:false,results: err  /**   * @api {get} /Api/user/:user_id  查看某个用户的关注   * @apiVersion 0.1.0   * @apiName user follow   * @apiGroup user   * @apiDescription 查看某个用户资料,用户要传有sessionToken 以判断 该ID 的用户是否好关系   *   * @apiParam {String} user_id 用户ID   * @apiParam {String} sessionToken 用户要传有sessionToken当前登录用户授权码   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/user/54b3a51de4b06e8b5a7fae79?sessionToken=xxxx   */  app.get '/Api/user/:id',(req,res)->    {sessionToken} = req.query    user_id = req.params.id    getUserInfo user_id,sessionToken      .then -> res.json status:true,results: &0      ,(err)-> res.json status:false,results: err  /**     * @api {POST} /Api/user/unfollow  取消关注某个用户     * @apiVersion 0.1.0     * @apiName user follow     * @apiGroup user     * @apiDescription 取消关注某个用户     * @apiParam {String} user_id 用户ID     * @apiParam {String} sessionToken 用户要传有sessionToken当前登录用户授权码     */  app.post '/Api/user/unfollow',(req,res)->    {sessionToken,user_id} = req.body    checkSessionToken sessionToken      .then (user)->        user.unfollow user_id          .then -> res.json status:true,results: &0          ,(followErr)-> res.json status:false,results: err      ,(err)-> res.json status:false,results: err  /**   * @api {POST} /Api/user/follow  关注某个用户   * @apiVersion 0.1.0   * @apiName user follow   * @apiGroup user   * @apiDescription 关注某个用户   * @apiParam {String}user_id 用户ID   * @apiParam {String}sessionToken 用户要传有sessionToken当前登录用户授权码   */  app.post '/Api/user/follow',(req,res)->    {sessionToken,user_id} = req.body    checkSessionToken sessionToken      .then (user)->        user.follow user_id          .then -> res.json status:true,results: &0          ,(followErr)-> res.json status:false,results: err      ,(err)-> res.json status:false,results: err  #查看某个用户的发布的评论  app.get '/Api/user/:user_id/comment',(req,res)->    user_id = req.params.user_id    {limit,skip} = req.query    UserComment user_id,limit,skip      .then ->          res.json status:true,results:&0,count:&1      ->          res.json status:false,results:&0  #查看某个用户的收藏展览数据  app.get '/Api/user/:user_id/favorExhibition',(req,res)->    user_id = req.params.user_id    {limit,skip} = req.query    getUserFavoriteByUserId user_id,\"UserFavoriteExhibition\",limit,skip      .try ->        &0.forEach (item)->          item.createdAt = (new Date item.createdAt).getTime!          item.favorAt = (new Date item.favorAt).getTime!          item.isFavor = 0        res.json status:true,results:(exRecommandFilter &0,undefined),count:&1      .catch -> res.json status:false,results:&0.responseText  #查看某个用户的收藏 展馆数据  app.get '/Api/user/:user_id/favorGallery',(req,res)->    user_id = req.params.user_id    {limit,skip} = req.query    getUserFavoriteByUserId user_id,\"UserFavoriteGallery\",limit,skip      .try ->        &0.forEach (item)->            item.exCount = item.exhibitionAll?.length || 0            item.createdAt = (new Date item.createdAt).getTime!            item.favorAt = (new Date item.favorAt).getTime!            item.isFavor = 0        res.json status:true,results: (galleryRecommandFilter &0,undefined),count:&1      .catch -> res.json status:false,results:&0.responseText  /**   * @api {get} /Api/gallery/:gid/exhibition  单个展馆的所有展览   * @apiVersion 0.1.0   * @apiName  exhibition in gallery   * @apiGroup Gallery   * @apiDescription 展馆的所有展览   *   * @apiParam {String}gid 展馆id   * @apiParam {String}[limit=100] limit 取多少个.   * @apiParam {String}[skip=0] skip 跳过多少个.   * @apiParam {String=en}[lang] 语言   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/gallery/54b377f0e4b06e8b5a7cd4ca/exhibition?limit=10&skip=10   *   * @apiUse successExhibition   */  app.get '/Api/gallery/:gid/exhibition',(req,res)->    {limit,skip,lang,sessionToken} = req.query    gid = req.params.gid    joi.validateID gid,res,->      o = {order:\"-updatedAt\",include:exhibitionInclude,where:{deleted:{$ne:1},workStep:1,\"$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"Gallery\",\"objectId\":gid},\"key\":\"exhibitionAll\"}}}      o.limit = limit if limit      o.skip = skip if skip      send \"classes/Exhibition\"      ,o      ,\"GET\",->        tempT =  Date.now() / 1000        exhibitionData = []        exhibitionData = exhibitionFilter &0.results,lang        exhibitionData = exhibitionData.map (item)->                        item.end = 0 # 常展为 1                        item.createdAt = (new Date item.createdAt).getTime!                        item.updatedAt = (new Date item.updatedAt).getTime!                        if item.timeType === 0 then                          beginTime = (new Date item.beginTime.iso).getTime! / 1000                          endTime = (new Date item.endTime.iso).getTime! / 1000 + ((23*60 + 59) * 60)                          if beginTime >= tempT                            item.end = 0                          else                            item.end = if beginTime <= tempT and endTime <= tempT                                       then 1                                       else 0                        delete item.beginTime                        delete item.endTime                        item        checkUserFavorite sessionToken,\"UserFavoriteExhibition\",exhibitionData,(exhibitionResultsData)->          res.json status:true,results:exhibitionResultsData      ,->        res.json status:false,results:&0.responseText  /**   * @api {get} /Api/item/:item_id  查看单个展品的详细内容   * @apiVersion 0.1.0   * @apiName   item in exhibition   * @apiGroup Gallery   * @apiDescription 查看单个展品的详细内容   *   * @apiParam {String}item_id 展品ID   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/item/54b3a51de4b06e8b5a7fae79   *   * @apiUse successItem   */  app.get '/Api/item/:item_id',(req,res)->    {lang} = req.query    item_id = req.params.item_id    joi.validateID item_id,res,->      send \"classes/Item/#{item_id}\",{},\"GET\",(itemInfo)->        #res.json status:true,results:itemFilter &0,lang        debug \"itemInfo : #{JSON.stringify itemInfo}\"        createdAt = (new Date itemInfo.createdAt).getTime!        delete itemInfo.createdAt        itemInfo.createdAt = createdAt        if itemInfo==={} then          res.json status:false result:\"展品不存在\"        else          send \"classes/Exhibition/#{itemInfo.exhibition.objectId}\",include:exhibitionInclude,\"GET\",->            item={}            #exhibition = exhibitionFilter &0,lang            item = itemFilter itemInfo,lang            #item.exhibition = exhibition            res.json status:true,results: item          ,->            res.json status:false,results:&0.responseText      ,->        res.json status:false,results:&0.responseText  /**   * @api {get} /Api/exhibition/:gid/item  单个展览的所有展品   * @apiVersion 0.1.0   * @apiName   items in exhibition   * @apiGroup Gallery   * @apiDescription 单个展览的所有展品   *   * @apiParam {String}eid 展览id   * @apiParam {String}[limit=500] limit 取多少个.   * @apiParam {String}[skip=0] skip 跳过多少个.   * @apiParam {String=en}[lang] 语言   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/exhibition/54b3a51de4b06e8b5a7fae79/item?limit=10&skip=10   *   * @apiUse successItem   */  app.get '/Api/exhibition/:eid/item',(req,res)->    {limit,skip,lang} = req.query    eid = req.params.eid    joi.validateID eid,res,->      o = {include:itemInclude,where:{\"$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"Exhibition\",\"objectId\":eid},\"key\":\"items\"}}}      o.limit = if limit then limit else 500      o.skip = skip if skip      o.order =\"-sort,createdAt\"      send \"classes/Item\"      ,o      ,\"GET\",->        itemInfo = itemFilter &0.results,lang        debug \"itemInfo : #{itemInfo}\"        itemInfo.sort = 0 if itemInfo.sort === \"\"        res.json status:true,results:itemInfo      ,->        res.json status:false,results:&0.responseText  /**   * @api {get} /Api/availableCity 可用城市   * @apiVersion 0.1.0   * @apiName   city available   * @apiGroup Other   * @apiDescription 所以已经录入的城市   *   * @apiExample Example usage:   * curl -X GET http://dev.knowhere.avosapps.com/Api/availableCity   *   * @apiUse successCity   */  app.get '/Api/availableCity',(req,res)->    send \"classes/Address\",{ukey:\"city\"},\"GET\"    ,->      debug \"availableCity\", &0.results[0]      res.json status:true,results:cityFilter &0.results[0],undefined    ,->      res.json status:false,results:&0.responseText  /**    @api {get} /Api/user/logout  User logout    @apiVersion 0.1.0    @apiName logout    @apiGroup User    @apiPermission login    @apiDescription 用户注销    @apiExample Example usage:    curl -i http://dev.knowhere.avosapps.com/Api/user/logout    @apiSuccess {Boolean} status 操作是否成功.    @apiSuccess {Boolean}  results    @apiSuccessExample {json} Success-Response::    {      \"status\": true,      \"results\": true    }   */  app.get '/Api/user/logout', (req, res)->    #avosExpressCookieSession将自动清除登录cookie信息      AV.User.logOut()      #res.redirect('/profile')      res.json status:true,results:true  /**    @api {get} /Api/user/comment  用户评论列表    @apiVersion 0.1.0    @apiName UserComment    @apiGroup User    @apiPermission login    @apiDescription 查看用户评论列表    @apiParam {String} sessionToken 用户登录授权码    @apiExample Example usage:    curl -i http://dev.knowhere.avosapps.com/Api/user/comment   */  app.get '/Api/user/comment/list',(req,res)->    {limit,skip,sessionToken}=req.query    UserCommentGetter sessionToken,limit,skip      .then -> res.json status:true,results:&0,count:&1      ,-> res.json status:false,results:&0  #删除评论  app.post '/Api/user/comment/:commentId/remove',(req,res)->    {sessionToken} = req.body    commentId = req.params.commentId    removeUserCommentBySessionToken sessionToken,commentId      .then -> res.json status:true      ,-> res.json status:false,results:&0  /**    @api {post} /Api/user/auth 第三方帐号登陆    @apiVersion 0.1.0    @apiName weixinLogin    @apiGroup User    @apiDescription 登陆    @apiParam {String} country 国家.    @apiParam {String} city 城市.    @apiParam {Number=1,2} sex 性别    @apiParam {String} openid openid.微博用户是uid    @apiParam {String} nickname 用户昵称.    @apiParam {String} language 语言.    @apiParam {String} [location] 地区    @apiParam {String} headimgurl 头像.    @apiParam {String=weibo,weixin,qq} [platform=weixin] 平台.    @apiExample {curl} Example usage:    curl -X POST http://dev.knowhere.avosapps.com/Api/user/auth -d openid=o2DqTtwt_9thVO0aaZVeZJOTuX6w    @apiUse successUser   */  app.post \"/Api/user/auth\",(req,res)->    debug \"auth\",req.body,req.query    joi.validateweixin req.body,res,(err,data)->      res.json status:false,results:err if err      /*openid = data.openid      if data.platform === \"qq\"        openid = Date.now().toString(16)        md5 = crypto.createHash \"md5\"        md5.update pass        openid = md5.digest \"hex\"*/      authData = authorMap[data.platform](data.openid)      debug \"authData : #{JSON.stringify authData}\"      AV.User._logInWith(data.platform,authData)      .try (user)->      # 返回绑定后的用户        /*debug \"currentUser #{user}\"        debug \"user.get('sex') #{user.get('sex')}\"        debug \"_sessionToken : #{user._sessionToken}\"*/        if !user.get('sex')          for k,v of data            user.set k,v if k!= 'openid'          user.setACL(new AV.ACL(AV.User.current()));        AV.Promise.as(user)        #user.set \"email\",data.email if data.email      .try (user)->        debug \"user.get('easemob') #{user.get('easemob')}\"        if !user.get('easemob')          p = new AV.Promise()          pass = user.id+Date.now().toString(16)          md5 = crypto.createHash \"md5\"          md5.update pass          pass = md5.digest \"hex\"          debug \"~~~before create\",user.get('username'),pass,user.get('nickname')          easemob.userCreate user.get('username'),pass,user.get('nickname')||\"用户\",(err,data)->            debug \"easemob.userCreate\",err,data            return  p.reject err if err            user.set 'easemob',data['entities'][0]['uuid']            user.set 'easemobPwd',pass            p.resolve user          return p        else          AV.Promise.as user      .try (user)->        debug \"saveUserInfo #{JSON.stringify user}\"        debug \"user.dirty  #{user.dirty!}\"        if user.dirty!          user.save()        else          AV.Promise.as user      .try (user)->          debug \"xx\",arguments          _user = user.attributes          _user.objectId = user.id          _user.sessionToken = user._sessionToken          res.json status:true,results:_user      .catch (err)->          debug \"Error Auth:#{JSON.stringify err}\"          res.json status:false,results:err.responseText||err  /**    @api {post} /Api/user/favor/exhibition 添加收藏展览    @apiVersion 0.1.0    @apiName addUserFavoriteExhibition    @apiGroup User    @apiDescription 添加收藏展览    @apiParam {String} sessionToken 登录授权.    @apiParam {String} exhibition_id 展览ID.   */  app.post '/Api/user/favor/exhibition',(req,res)->    debug \"favor : #{JSON.stringify req.body}\"    {sessionToken,exhibition_id} = req.body    #添加收藏    addUserFavorite sessionToken,\"UserFavoriteExhibition\",\"Exhibition\",exhibition_id      .try -> res.json status:true,results:&0      .catch -> res.json status:false,results:&0.responseText  /**    @api {get} /Api/user/favor/exhibition 查询用户的收藏展览列表    @apiVersion 0.1.0    @apiName getUserFavoriteExhibition    @apiGroup User    @apiDescription 查询用户的收藏列表    @apiParam {String} sessionToken 登录授权.   */  app.get '/Api/user/favor/exhibition',(req,res)->    debug \"favor : #{JSON.stringify req.query}\"    {sessionToken,limit,skip} = req.query    #查看收藏    getUserFavorite sessionToken,\"UserFavoriteExhibition\",limit,skip      .try ->        &0.forEach (item)->          item.createdAt = (new Date item.createdAt).getTime!          item.favorAt = (new Date item.favorAt).getTime!          item.isFavor = 1        res.json status:true,results:(exRecommandFilter &0,undefined),count:&1      .catch -> res.json status:false,results:&0.responseText  /**    @api {post} /Api/user/favor/exhibition/remove 取消收藏展览    @apiVersion 0.1.0    @apiName removeUserFavoriteExhibition    @apiGroup User    @apiDescription 取消收藏展览    @apiParam {String} sessionToken 登录授权.    @apiParam {String} exhibition_id 展览ID.   */  app.post '/Api/user/favor/exhibition/remove',(req,res)->    debug \"favor : #{JSON.stringify req.body}\"    {sessionToken,exhibition_id} = req.body    removeUserFavorite sessionToken,\"UserFavoriteExhibition\",\"Exhibition\",exhibition_id      .try -> res.json status:true      .catch -> res.json status:false,results:&0.responseText  /**    @api {post} /Api/user/favor/gallery 添加展馆收藏    @apiVersion 0.1.0    @apiName addUserFavoriteGallery    @apiGroup User    @apiDescription 展馆收藏    @apiParam {String} sessionToken 登录授权.    @apiParam {String} gallery_id 展馆ID.   */  app.post '/Api/user/favor/gallery',(req,res)->    debug \"favor : #{JSON.stringify req.body}\"    {sessionToken,gallery_id} = req.body    addUserFavorite sessionToken,\"UserFavoriteGallery\",\"Gallery\",gallery_id      .try -> res.json status:true,results:&0      .catch -> res.json status:false,results:&0.responseText  /**    @api {post} /Api/user/favor/gallery/remove 取消收藏的展馆    @apiVersion 0.1.0    @apiName removeUserFavoriteGallery    @apiGroup User    @apiDescription 取消收藏展馆    @apiParam {String} sessionToken 登录授权.    @apiParam {String} gallery_id 展馆ID.   */  app.post '/Api/user/favor/gallery/remove',(req,res)->    debug \"favor : #{JSON.stringify req.body}\"    {sessionToken,gallery_id} = req.body    #添加收藏    removeUserFavorite sessionToken,\"UserFavoriteGallery\",\"Gallery\",gallery_id      .try -> res.json status:true,results:&0      .catch -> res.json status:false,results:&0.responseText  /**    @api {get} /Api/user/favor/gallery 查询用户的收藏展馆列表    @apiVersion 0.1.0    @apiName getUserFavoriteGallery    @apiGroup User    @apiDescription 查询用户的收藏展馆列表    @apiParam {String} sessionToken 登录授权.    @apiParam {String} skip 略过数量    @apiParam {String} limit 输出限制.   */  app.get '/Api/user/favor/gallery',(req,res)->    debug \"favor : #{JSON.stringify req.query}\"    {limit,skip,sessionToken} = req.query    #查看收藏    getUserFavorite sessionToken,\"UserFavoriteGallery\",limit,skip      .try ->        &0.forEach (item)->            item.exCount = item.exhibitionAll?.length || 0            item.createdAt = (new Date item.createdAt).getTime!            item.favorAt = (new Date item.favorAt).getTime!            item.isFavor = 1        res.json status:true,results: (galleryRecommandFilter &0,undefined),count:&1      .catch -> res.json status:false,results:&0.responseText  /**    @api {post} /Api/user/resetPassword 修改用户密码    @apiVersion 0.1.0    @apiName resetPassword    @apiGroup User    @apiDescription 修改用户密码    @apiParam {String} sessionToken 登录授权.    @apiParam {String} newpwd 新密码.    @apiParam {String} oldpwd 旧密码.   */  app.post '/Api/user/resetPassword',(req,res)->    {oldpwd,newpwd,sessionToken} = req.body    # 以旧密码确认的方式修改用户密码    resetPassword sessionToken,oldpwd,newpwd      .try -> res.json status:true,results:&0      .catch -> res.json status:false,results:&0.responseText  /**    @api {post} /Api/user/forgetPassword 忘记(找回)用户密码    @apiVersion 0.1.0    @apiName forgetPassword    @apiGroup User    @apiDescription 忘记(找回)用户密码    @apiParam {String} mobile 手机号码.    @apiParam {String} verifycode 短信验证码.    @apiParam {String} newpwd 新密码.   */  app.post '/Api/user/forgetPassword',(req,res)->    {mobile,verifycode,newpwd,isDebug} = req.body    forgetPassword mobile,verifycode,isDebug,newpwd      .try -> res.json status:true,results:&0      .catch -> res.json status:false,results:&0.responseText  /**    @api {post} /Api/user/modify 修改用户资料    @apiVersion 0.1.0    @apiName modifyUserInfo    @apiGroup User    @apiDescription 修改用户性别,昵称及头像等数据    @apiParam {String} sessionToken 登录授权.    @apiParam {String} sex 性别: 1为男,0为女    @apiParam {String} nickname 用户昵称    @apiParam {file} headimgurl 头像    @apiParam {String} location 地区    @apiParam {String} birthday 生日   */  app.post '/Api/user/modify',(req,res)->    {sessionToken} = req.body    query = new AV.Query AV.User    query.equalTo \"sessionToken\", sessionToken    query.first {      success:(user)->        _user = user        debug \"_user : #{JSON.stringify _user.attributes}\"        userInfo = req.body        debug \"userInfo : #{JSON.stringify userInfo,'','\\t'}\"        #昵称        if userInfo.nickname          _user.set 'nickname',userInfo.nickname        #性别        if userInfo.sex          sex = if userInfo.sex === \"0\"                then 0                else 1          _user.set 'sex',sex        #地区        if userInfo.location          _user.set 'location',userInfo.location        #生日        if userInfo.birthday          _user.set 'birthday',userInfo.birthday        sessionToken = userInfo.sessionToken;        debug \"sesstionToken : #{sessionToken}\"        if req.files && !isEmpty(req.files)          saveFileWithUrl req.files,req.body .then (data)->            debug \"data : #{JSON.stringify data}\"            headimgurl = \"http://ac-brknqdxv.clouddn.com/2621a17ac8e9368a.png?imageView/2/w/200/h/200\"            headimgurl = data.headimgurl if data.headimgurl            _user.set 'headimgurl',headimgurl            debug \"user : #{JSON.stringify _user}\"            if _user.dirty!              debug \"更新\"              _user.save!            attributes = _user.attributes            attributes.sessionToken = sessionToken            res.json status:true,results:attributes        else         _user.save!              .then (data)->                sessionToken = userInfo.sessionToken;                debug \"sesstionToken : #{sessionToken}\"                attributes = _user.attributes                attributes.sessionToken = sessionToken                res.json status:true,results:attributes              ,(err)->                res.json status:false,results:&0      error: (obj,err)->        res.json status:false,results:&0.responseText    }  /**    @api {post} /Api/user/smsVerify 发送用户验证码    @apiVersion 0.1.0    @apiName smsVerify    @apiGroup User    @apiDescription 向手机发送短信验证码    @apiParam {String} mobile 手机号码   */  app.post '/Api/user/smsVerify',(req,res)->    {mobile} = req.body    debug \"mobile:#{mobile}\"    joi.validateMobilePhone mobile,res,(err,res)->      sendVerify mobile        .then ->          res.json status:true,results:{mobile}      ,->          res.json status:false,results:&0.responseText  /**    @api {post} /Api/user/login 用户登录    @apiVersion 0.1.0    @apiName userlogin    @apiGroup User    @apiDescription 用户登录    @apiParam {String} mobile 手机号码    @apiParam {String} password 登录密码   */  app.post '/Api/user/login',(req,res)->    {mobile,password} = req.body    loginInfo = {username:mobile,password:password}    send \"login\",loginInfo,\"GET\",->      res.json status:true,results:&0    ,(err)->        res.json status:false,results:err.responseText  /**    @api {post} /Api/user/reg 用户注册    @apiVersion 0.1.0    @apiName userRegister    @apiGroup User    @apiDescription 用户注册    @apiParam {String} mobile 手机号码    @apiParam {String} verifycode 手机短信验证码    @apiParam {String} isDebug 是否调试    @apiParam {String} password 登录密码   */  app.post '/Api/user/reg',(req,res)->    {mobile,nickname,verifycode,password,isDebug,sex,headimgurl} = req.body    userInfo = {mobile,verifycode,password,isDebug,nickname,sex,headimgurl}    debug \"req.body : #{JSON.stringify req.body}\"    saveFileWithUrl req.files,req.body .then (data)->      data.sex = if data.sex === \"1\"                 then 1                 else 0      userCreate data        .then ->            res.json status:true,results:&0        ,->            res.json status:false,results:&0.responseText    ,->      res.json status:false,results:&0  /**    @api {get} /Api/user/profile profile for  User    @apiVersion 0.1.0    @apiName profile    @apiGroup User    @apiPermission login    @apiDescription 获取当前用户信息    @apiExample {curl} Example usage:    curl -i http://dev.knowhere.avosapps.com/Api/user/profile    @apiUse errorNotLogin    @apiUse successUser   */  app.get '/Api/user/profile', (req, res)->    console.log \"profile\",AV.User.current()    user = AV.User.current()    if user      user.fetch success:(user)->        res.json status:true,results:user._serverData      error:(error)->        res.json status:false,results:error    else      res.json status:false,results:message:\"not login yet\"\n\\ No newline at end of file\n",
+			"settings":
+			{
+				"buffer_size": 120426,
+				"line_ending": "Unix",
+				"name": "Git Diff",
+				"read_only": true,
+				"scratch": true
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/services/accountServices.ls",
+			"settings":
+			{
+				"buffer_size": 17204,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/easemob.js",
+			"settings":
+			{
+				"buffer_size": 7221,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/ks_itemController.js",
+			"settings":
+			{
+				"buffer_size": 7429,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/services/exhibitionServices.ls",
+			"settings":
+			{
+				"buffer_size": 5005,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/share.js",
+			"settings":
+			{
+				"buffer_size": 5756,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 375.0,
+		"last_filter": "PM",
+		"selected_items":
+		[
+			[
+				"PM",
+				"Project Manager"
+			],
+			[
+				"pm",
+				"Project Manager"
+			],
+			[
+				"gitcommi",
+				"Git: Commit"
+			],
+			[
+				"gitadd",
+				"Git: Add..."
+			],
+			[
+				"gitstat",
+				"GitStatus: Changed files"
+			],
+			[
+				"grunt",
+				"Grunt"
+			],
+			[
+				"git:diff",
+				"Git: Diff Current File"
+			],
+			[
+				"git",
+				"Git: Gui"
+			],
+			[
+				"pi",
+				"Package Control: Install Package"
+			],
+			[
+				"Snippet: ",
+				"Snippet: log"
+			],
+			[
+				"diff",
+				"Git: Diff Current File"
+			],
+			[
+				"sidebargit:st",
+				"Git (SideBarGit): Status Verbose"
+			],
+			[
+				"gitst",
+				"GitStatus: Changed files"
+			],
+			[
+				"gitstatus",
+				"Git: Status"
+			],
+			[
+				"PACKAGE INSTALL",
+				"Package Control: Install Package"
+			],
+			[
+				"git statu",
+				"Git: Status"
+			],
+			[
+				"package install",
+				"Package Control: Install Package"
+			],
+			[
+				"project manager",
+				"Project Manager: Open Project"
+			],
+			[
+				"package",
+				"Preferences: Browse Packages"
+			],
+			[
+				"project m",
+				"Project Manager: Edit Project"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"package con",
+				"Package Control: List Packages"
+			],
+			[
+				"add",
+				"Project: Add Folder"
+			],
+			[
+				"prom",
+				"Project Manager: Add Project"
+			],
+			[
+				"project",
+				"Project Manager: Remove Project"
+			],
+			[
+				"projectman",
+				"Project Manager: Open Project"
+			],
+			[
+				"projectm",
+				"Project Manager"
+			],
+			[
+				"Package Control:in",
+				"Package Control: Install Package"
+			],
+			[
+				"mark",
+				"Set Syntax: Markdown"
+			]
+		],
+		"width": 732.0
+	},
+	"console":
+	{
+		"height": 126.0,
+		"history":
+		[
+			"show collection",
+			"ls",
+			"ssh",
+			"sublime.folder()",
+			"show folder",
+			"folder",
+			"import urllib.request,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)",
+			"install",
+			"git"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/lib",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/services",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/config",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/public"
+	],
+	"file_history":
+	[
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/.gitignore",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/[Errno 2] No such file or directory",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/api.ls",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/easemob.ls",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/SublimeGrunt.sublime-settings",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/index.js",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/JSON.sublime-settings",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/Gruntfile.js",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/header.md",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/package.json",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/README.md",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/testDataPath.js",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/testUmengPush.js",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/testUmengPush.ls",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/Projects/meili.sublime-project",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/pm.sublime-settings"
+	],
+	"find":
+	{
+		"height": 39.0
+	},
+	"find_in_files":
+	{
+		"height": 93.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"comment",
+			"/api/exhibition/:eid",
+			"/api/exhibtion/:eid",
+			"/api/exhibtion/:",
+			"itemEditSchema",
+			"validateItemEdit",
+			"edit/item",
+			"authorMap",
+			"REQUIRE",
+			"string",
+			"Expression_1",
+			"treePhoto",
+			"treeAllPhoto",
+			"maxy",
+			"Input Text Fields",
+			" <!-- #helpModal -->\n    <div id=\"helpModal\" class=\"modal fade\">\n      <div class=\"modal-dialog\">\n        <div class=\"modal-content\">\n          <div class=\"modal-header\">\n            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n            <h4 class=\"modal-title\">Modal title</h4>\n          </div>\n          <div class=\"modal-body\">\n            <p>\n              Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor\n              in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n            </p>\n          </div>\n          <div class=\"modal-footer\">\n            <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button>\n          </div>\n        </div><!-- /.modal-content -->\n      </div><!-- /.modal-dialog -->\n    </div><!-- /.modal --><!-- /#helpModal -->"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"key"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 5,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/public/index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 50,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/views/share/index.dust",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5571,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1489,
+								1504
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 177.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/views/share/down.dust",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5391,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1317,
+								1317
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 16,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/ks_itemController.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5342,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								137,
+								137
+							]
+						],
+						"settings":
+						{
+							"live_git_annotations": false,
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 11,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/share.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2795,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								593,
+								653
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 9,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/api.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 59628,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								23907,
+								23907
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 15354.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/services/commentsServices.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5536,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1065,
+								1065
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2356.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/index.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 38828,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								29442,
+								29442
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 16357.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/user.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1708,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/lib/static.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7870,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								494,
+								494
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/lib/joi.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 9687,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2626,
+								2626
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 944.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 120426,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								61269,
+								61278
+							]
+						],
+						"settings":
+						{
+							"git_root_dir": "/Users/kenshinhu/BitTorrent Sync/meili/meili",
+							"syntax": "Packages/Diff/Diff.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 37510.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 10,
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/services/accountServices.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 17204,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1004,
+								1004
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 463.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 13,
+					"type": "text"
+				},
+				{
+					"buffer": 13,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/easemob.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7221,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1335,
+								1335
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 15,
+					"type": "text"
+				},
+				{
+					"buffer": 14,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/ks_itemController.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7429,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 14,
+					"type": "text"
+				},
+				{
+					"buffer": 15,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/services/exhibitionServices.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5005,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1450,
+								1450
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 131.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 16,
+					"file": "/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/share.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5756,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								594,
+								594
+							]
+						],
+						"settings":
+						{
+							"history_list_is_closing": true,
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 12,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 39.0
+	},
+	"input":
+	{
+		"height": 31.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 291.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.git":
+	{
+		"height": 136.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 138.0
+	},
+	"pinned_build_system": "",
+	"project": "meili.sublime-project",
+	"replace":
+	{
+		"height": 54.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"index.dus",
+				"cloud/views/share/index.dust"
+			],
+			[
+				"index",
+				"public/index.html"
+			],
+			[
+				"down",
+				"cloud/views/share/down.dust"
+			],
+			[
+				"api.ls",
+				"cloud/routes/api.ls"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 245.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

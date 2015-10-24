@@ -1,0 +1,409 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "/Users/kenshinhu/BitTorrent Sync/zhufu/route/api.ls",
+			"settings":
+			{
+				"buffer_size": 269,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/apidoc.sublime.snippet",
+			"settings":
+			{
+				"buffer_size": 309,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 375.0,
+		"last_filter": "pm",
+		"selected_items":
+		[
+			[
+				"pm",
+				"Project Manager"
+			],
+			[
+				"Snippet: ",
+				"Snippet: log"
+			],
+			[
+				"grunt",
+				"Grunt"
+			],
+			[
+				"diff",
+				"Git: Diff Current File"
+			],
+			[
+				"gitstat",
+				"GitStatus: Changed files"
+			],
+			[
+				"sidebargit:st",
+				"Git (SideBarGit): Status Verbose"
+			],
+			[
+				"pi",
+				"Package Control: Install Package"
+			],
+			[
+				"gitst",
+				"GitStatus: Changed files"
+			],
+			[
+				"git",
+				"Git: Gui"
+			],
+			[
+				"gitstatus",
+				"Git: Status"
+			],
+			[
+				"PACKAGE INSTALL",
+				"Package Control: Install Package"
+			],
+			[
+				"git statu",
+				"Git: Status"
+			],
+			[
+				"package install",
+				"Package Control: Install Package"
+			],
+			[
+				"project manager",
+				"Project Manager: Open Project"
+			],
+			[
+				"package",
+				"Preferences: Browse Packages"
+			],
+			[
+				"project m",
+				"Project Manager: Edit Project"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"package con",
+				"Package Control: List Packages"
+			],
+			[
+				"add",
+				"Project: Add Folder"
+			],
+			[
+				"prom",
+				"Project Manager: Add Project"
+			],
+			[
+				"project",
+				"Project Manager: Remove Project"
+			],
+			[
+				"projectman",
+				"Project Manager: Open Project"
+			],
+			[
+				"projectm",
+				"Project Manager"
+			],
+			[
+				"Package Control:in",
+				"Package Control: Install Package"
+			],
+			[
+				"mark",
+				"Set Syntax: Markdown"
+			]
+		],
+		"width": 732.0
+	},
+	"console":
+	{
+		"height": 126.0,
+		"history":
+		[
+			"show collection",
+			"ls",
+			"ssh",
+			"sublime.folder()",
+			"show folder",
+			"folder",
+			"import urllib.request,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)",
+			"install",
+			"git"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/kenshinhu/BitTorrent Sync/zhufu",
+		"/Users/kenshinhu/BitTorrent Sync/zhufu/route"
+	],
+	"file_history":
+	[
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/apidoc",
+		"/Users/kenshinhu/BitTorrent Sync/zhufu/gulpfile.js",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/SublimeGrunt.sublime-settings",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/cloud/routes/index.js",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/JSON.sublime-settings",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/Gruntfile.js",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/header.md",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/package.json",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/README.md",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/testDataPath.js",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/testUmengPush.js",
+		"/Users/kenshinhu/BitTorrent Sync/meili/meili/testUmengPush.ls",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/Projects/meili.sublime-project",
+		"/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/pm.sublime-settings"
+	],
+	"find":
+	{
+		"height": 29.0
+	},
+	"find_in_files":
+	{
+		"height": 93.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"string",
+			"Expression_1",
+			"treePhoto",
+			"treeAllPhoto",
+			"maxy",
+			"Input Text Fields",
+			" <!-- #helpModal -->\n    <div id=\"helpModal\" class=\"modal fade\">\n      <div class=\"modal-dialog\">\n        <div class=\"modal-content\">\n          <div class=\"modal-header\">\n            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n            <h4 class=\"modal-title\">Modal title</h4>\n          </div>\n          <div class=\"modal-body\">\n            <p>\n              Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor\n              in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n            </p>\n          </div>\n          <div class=\"modal-footer\">\n            <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button>\n          </div>\n        </div><!-- /.modal-content -->\n      </div><!-- /.modal-dialog -->\n    </div><!-- /.modal --><!-- /#helpModal -->"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"key"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "/Users/kenshinhu/BitTorrent Sync/zhufu/route/api.ls",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 269,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								269,
+								269
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LiveScript/Syntaxes/LiveScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 1,
+					"file": "/Users/kenshinhu/Library/Application Support/Sublime Text 3/Packages/User/apidoc.sublime.snippet",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 309,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								309,
+								309
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 29.0
+	},
+	"input":
+	{
+		"height": 31.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.5,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 291.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.git":
+	{
+		"height": 136.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 138.0
+	},
+	"pinned_build_system": "",
+	"project": "zhufu.sublime-project",
+	"replace":
+	{
+		"height": 54.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"down",
+				"cloud/views/share/down.dust"
+			],
+			[
+				"api.ls",
+				"cloud/routes/api.ls"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 245.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
